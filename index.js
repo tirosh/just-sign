@@ -46,11 +46,12 @@ app.post('/sign', (req, res) => {
     const { firstname, lastname, signature } = req.body;
     db.addSignature(firstname, lastname, signature)
         .then(dbData => {
-            console.log(dbData);
             req.session.signatureId = dbData.rows[0].id;
             res.redirect('/thanks');
         })
-        .catch(err => console.log('error in addSignature:', err));
+        .catch(err => {
+            console.log('error in addSignature:', err);
+        });
 });
 
 // GET thanks
