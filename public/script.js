@@ -1,5 +1,5 @@
 (function() {
-    console.log($);
+    // console.log($);
     console.log("I'm not insane..");
 
     // CANVAS
@@ -8,6 +8,7 @@
     var signing = false;
 
     var canvas = document.getElementById('canvas');
+    var signature = document.getElementById('signature');
     var ctx = canvas.getContext('2d');
 
     ctx.lineJoin = 'round';
@@ -21,9 +22,11 @@
     canvas.addEventListener('mousemove', function(e) {
         sign(e);
     });
+    canvas.addEventListener('mouseup', function(e) {
+        if (signature.value) signature.value = canvas.toDataURL();
+    });
     document.addEventListener('mouseup', function(e) {
         signing = false;
-        $('input[name="signature"]').val(canvas.toDataURL());
     });
 
     function sign(e) {

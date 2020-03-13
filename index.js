@@ -2,19 +2,30 @@ const express = require('express');
 const hb = require('express-handlebars');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
+const csurf = require('csurf');
 const db = require('./db.js');
 const app = express();
 const port = 8080;
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
 app.use(
     cookieSession({
         secret: `Poor, angry Chicken`,
         maxAge: 1000 * 60 * 60 * 24 * 14
     })
 );
+// protecting against CSRF attacks
+app.use(csurf());
+
+//
+app.use((req, res, next) => {
+    console.log(`${req.method} request to ${req.url}
+-----------------------------------------------\n`);
+    res.set('x-frame-options', 'DENY');
+    res.locals.csrfToken = req.csrfToken();
+    next();
+});
 
 // configure express to use express-handlebars
 app.engine('handlebars', hb());
@@ -23,15 +34,9 @@ app.set('view engine', 'handlebars');
 // tell app to serve static projects
 app.use(express.static('./public'));
 
-app.use((req, res, next) => {
-    console.log(`${req.method} request to ${req.url}
------------------------------------------------\n`);
-    next();
-});
-
-// GET home
-app.get('/', (req, res) => {
-    res.render('home', {
+// GET petition
+app.get('/petition', (req, res) => {
+    res.render('petition', {
         layout: 'main' // default, could be omitted
     });
 });
@@ -41,6 +46,7 @@ app.post('/sign', (req, res) => {
     const { firstname, lastname, signature } = req.body;
     db.addSignature(firstname, lastname, signature)
         .then(dbData => {
+            console.log(dbData);
             req.session.signatureId = dbData.rows[0].id;
             res.redirect('/thanks');
         })
