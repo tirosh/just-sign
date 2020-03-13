@@ -6,5 +6,6 @@ CREATE TABLE signatures (
     id SERIAL PRIMARY KEY,
     "first name" VARCHAR(255) NOT NULL CHECK("first name" != ''),
     "last name" VARCHAR(255) NOT NULL CHECK("last name" != ''),
-    signature TEXT NOT NULL CHECK(signature != '')
+    signature TEXT NOT NULL CHECK(signature != ''),
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

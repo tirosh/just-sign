@@ -2,3 +2,7 @@ node_modules
 .DS_Store
 package-lock.json
 secrets.json
+36-TwitterAPI/headlines.js
+36-TwitterAPI/index.js
+36-TwitterAPI/request.js
+36-TwitterAPI/twApi.js
