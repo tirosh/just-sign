@@ -23,7 +23,7 @@
         sign(e);
     });
     canvas.addEventListener('mouseup', function(e) {
-        if (signature.value) signature.value = canvas.toDataURL();
+        signature.value = canvas.toDataURL();
     });
     document.addEventListener('mouseup', function(e) {
         signing = false;
