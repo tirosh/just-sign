@@ -1,0 +1,116 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+body {
+    /* background-color: crimson; */
+    min-height: 100vh;
+    display: flex;
+    /* flex-direction: column; */
+    justify-content: center;
+    font-family: monospace;
+    font-size: 2em;
+    background: linear-gradient(
+        to bottom,
+        rgba(100, 100, 100, 0.1) 0%,
+        rgba(100, 100, 100, 0.05) 40%,
+        rgba(100, 100, 100, 0.1) 100%
+    );
+    background-repeat: repeat-x;
+}
+
+.wrapper {
+    /* border: 1px solid red; */
+    max-width: 900px;
+    width: 100vw;
+}
+
+h1 {
+    margin: 2em 2em 0 2em;
+}
+
+a,
+:visited {
+    color: blue;
+    font-size: 1em;
+    font-weight: normal;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+nav {
+    display: inline-flex;
+    flex-wrap: wrap;
+    /* border: 1px dashed; */
+    font-size: 0.75em;
+    margin: 0 2em;
+}
+
+nav div {
+    white-space: nowrap;
+    background-color: #d3d3d37a;
+    padding: 0.25em 0.5em;
+    margin: 0 0.5em 0.5em 0;
+}
+
+.projects {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 2em;
+}
+
+.projects .project {
+    width: 300px;
+    /* height: 300px; */
+    background-color: transparent;
+    perspective: 200vw;
+    margin: 2em 2em 0 2em;
+    font-size: 20px;
+}
+
+.project a {
+    line-height: 3em;
+}
+
+.projects .project img {
+    width: 300px;
+    height: 300px;
+    /* border: 1px solid hsla(0, 0%, 0%, 0.05); */
+    box-shadow: 20px 20px 0px 0px hsla(0, 0%, 0%, 0.2);
+}
+
+.description {
+    /* border: 1px dashed black; */
+    max-width: 900px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1em;
+    margin: 2em;
+    font-size: 0.75em;
+}
+
+.description img {
+    max-width: 600px;
+}
+
+.description .text {
+    white-space: pre-line;
+}
+
+.description .text a {
+    display: block;
+    margin-top: 1em;
+}
+
+footer {
+    font-size: 0.75em;
+    margin: 2em;
+}

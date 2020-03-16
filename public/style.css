@@ -33,6 +33,9 @@ main {
     margin-bottom: 1em;
 }
 
+.signature img {
+    display: none;
+}
 canvas {
     border: 1px solid black;
 }
