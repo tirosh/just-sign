@@ -1,9 +1,13 @@
 const express = require('express');
 const exphbs = require('express-handlebars');
 const bodyParser = require('body-parser');
+
 const cookieSession = require('cookie-session');
 const csurf = require('csurf');
-const db = require('./db.js');
+const db = require('./utils/db.js');
+
+// require bcrypt for hashing passwords
+const { hash, compare } = require('./utils/bcrypt.js');
 const app = express();
 const port = 8080;
 
@@ -20,8 +24,7 @@ app.use(csurf());
 
 //
 app.use((req, res, next) => {
-    console.log(`${req.method} request to ${req.url}
------------------------------------------------\n`);
+    console.log(`${req.method} request to ${req.url}`);
     res.set('x-frame-options', 'DENY');
     res.locals.csrfToken = req.csrfToken();
     next();
@@ -40,9 +43,7 @@ app.use(express.static('./public'));
 
 // redirect GET /
 app.get('/', (req, res) => {
-    req.session.signatureId
-        ? res.redirect('/thanks')
-        : res.redirect('/petition');
+    req.session.signId ? res.redirect('/thanks') : res.redirect('/petition');
 });
 
 // GET petition
@@ -54,67 +55,58 @@ app.get('/petition', (req, res) => {
 
 // POST sign
 app.post('/petition', (req, res) => {
-    const { firstname, lastname, signature } = req.body;
-    firstname === '' || lastname === '' || signature === ''
+    const { first, last, sign } = req.body;
+    first === '' || last === '' || sign === ''
         ? res.render('petition', {
-              firstname: firstname,
-              lastname: lastname,
-              backdrop: `
-              <img src="${signature}" alt="signature">`,
-              alert: `
-              <div class="alert">Please provide first name, last name and signature.</div>`
+              first: first,
+              last: last,
+              backdrop: sign,
+              alert: true
           })
         : db
-              .addSignature(firstname, lastname, signature)
+              .addSign(first, last, sign)
               .then(dbData => {
-                  req.session.signatureId = dbData.rows[0].id;
+                  req.session.signId = dbData.rows[0].id;
                   res.redirect('/thanks');
               })
               .catch(err => {
-                  console.log('error in addSignature:', err);
+                  console.log('error in addSign:', err);
               });
 });
 
 // GET thanks
 app.get('/thanks', (req, res) => {
     Promise.all([
-        db
-            .getSignature(req.session.signatureId)
-            .then(dbData => dbData.rows[0].signature),
-        db
-            .getCount(req.session.signatureId)
-            .then(dbData => dbData.rows[0].count)
+        db.getSign(req.session.signId).then(dbData => dbData.rows[0].sign),
+        db.getCount(req.session.signId).then(dbData => dbData.rows[0].count)
     ])
         .then(datArr => {
-            const signature = datArr[0];
+            const sign = datArr[0];
             const count = parseInt(datArr[1], 10);
-            res.render('thanks', { signature, count });
+            res.render('thanks', { sign, count });
         })
-        .catch(err => console.log('Error in getSignature /getCount:', err));
+        .catch(err => console.log('Error in getSign /getCount:', err));
 });
 
 // GET signers
 app.get('/signers', (req, res) => {
     Promise.all([
-        db.getFirstname(req.session.signatureId).then(dbData => dbData.rows),
-        db.getLastname(req.session.signatureId).then(dbData => dbData.rows)
+        db.getFirst(req.session.signId).then(dbData => dbData.rows),
+        db.getLast(req.session.signId).then(dbData => dbData.rows)
     ])
         .then(datArr => {
-            const firstNames = datArr[0];
-            const lastNames = datArr[1];
-            // console.log('firstNames:', firstNames);
-            // console.log('lastNames:', lastNames);
+            const firstnames = datArr[0];
+            const lastnames = datArr[1];
+            console.log('firstnames:', firstnames);
+            console.log('lastnames:', lastnames);
 
             const signers = [];
-            for (let i = 0; i < firstNames.length; i++) {
-                signers.push(Object.assign(firstNames[i], lastNames[i]));
+            for (let i = 0; i < firstnames.length; i++) {
+                signers.push(Object.assign(firstnames[i], lastnames[i]));
             }
-            // console.log('signers:', signers);
-
             res.render('signers', { signers });
-            // res.end();
         })
-        .catch(err => console.log('Error in getFirstname /getLastname:', err));
+        .catch(err => console.log('Error in getFirst /getLast:', err));
 });
 
 app.listen(port, () => console.log(`I'm listening on port: ${port}`));
