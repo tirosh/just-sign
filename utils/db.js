@@ -1,15 +1,24 @@
 const spicedPg = require('spiced-pg');
 const db = spicedPg('postgres:postgres:postgres@localhost:5432/petition');
 
-module.exports.insert = (table, userInpt) => {
+module.exports.insert = (table, userInpt, timestamp) => {
+    if (timestamp) userInpt.timestamp = 'NOW()';
     const keys = Object.keys(userInpt);
-    keys.push('timestamp');
-
     const values = Object.values(userInpt);
-    const valIndex = ['NOW()'];
+    const valIndex = [];
     for (let i = values.length; i > 0; i--) {
         valIndex.unshift(`$${i}`);
     }
+
+    // ////////////////////////////////////////////////
+    // const keys = Object.keys(userInpt);
+    // keys.push('timestamp');
+
+    // const values = Object.values(userInpt);
+    // const valIndex = ['NOW()'];
+    // for (let i = values.length; i > 0; i--) {
+    //     valIndex.unshift(`$${i}`);
+    // }
 
     const q = `
         INSERT INTO ${table} (${keys.toString()})

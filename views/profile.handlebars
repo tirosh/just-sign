@@ -1,0 +1,13 @@
+<h1>Profile</h1>
+<h2>Please tell us just a little bit more about yourself...</h2>
+{{#if (isdefined alert)}}<div class="alert">...</div>{{/if}}
+<form id="profile" action="/profile" method="post">
+    <label for="age">Age</label>
+    <input name="age" autocomplete="{{age}}">
+    <label for="city">City</label>
+    <input name="city" autocomplete="{{city}}">
+    <label for="url">Homepage</label>
+    <input name="url" autocomplete="{{homepage}}">
+    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    <button type="submit">Continue</button>
+</form>
