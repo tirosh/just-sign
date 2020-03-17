@@ -1,0 +1,11 @@
+<h1>Welcome to Petition</h1>
+<h2>Please log in...</h2>
+{{#if (isdefined alert)}}<div class="alert">...</div>{{/if}}
+<form action="/login" method="post">
+    <label for="email">Email Address</label>
+    <input name="email" autocomplete="{{email}}">
+    <label for="psswd">Password</label>
+    <input type="password" name="psswd" autocomplete="{{psswd}}">
+    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    <button type="submit">sign up</button>
+</form>

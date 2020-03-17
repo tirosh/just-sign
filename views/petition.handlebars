@@ -1,22 +1,12 @@
 <h1>Welcome to Petition</h1>
-<div class="description">
-    Lorem ipsum dolor sit amet consectetur adipisicing elit. Modi nesciunt provident tempora, non eos cumque explicabo quaerat aut odio? Aliquid iure dolorum animi commodi veritatis in, magnam aspernatur repellat quibusdam sapiente recusandae voluptas distinctio esse debitis ipsum rerum omnis modi dolorem ipsa autem quae obcaecati dolore tenetur est. Iure, atque.
-</div>
-{{#if (isdefined alert)}}<div class="alert">Please provide first name, last name and sign.</div>{{/if}}
-<form action="/petition" method="post">
-    <div class="names">
-        <label for="first">First Name</label>
-        <input type="text" name="first" id="first" placeholder="First Name" value="{{first}}">
-        <label for="last">Last Name</label>
-        <input type="text" name="last" id="last" placeholder="Last Name" value="{{last}}">
-    </div>
+<h2>Please sign here...</h2>
+{{#if (isdefined alert)}}<div class="alert">You have to sign to submit.</div>{{/if}}
+<form id="signature" action="/petition" method="post">
     <div class="signature">
-        {{#if (isdefined backdrop)}}
-        <img src="{{backdrop}}" alt="sign">
-        {{/if}}
         <canvas id="canvas" width="600" height="100"></canvas>
-        <input type="hidden" name="sign" id="signature">
+        <input type="hidden" name="sign">
     </div>
+    <h3>{{first}} {{last}} </h3>
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit">submit</button>
 </form>

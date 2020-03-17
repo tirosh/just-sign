@@ -2,8 +2,7 @@
     console.log('Petition here..');
 
     var form = document.getElementsByTagName('form')[0];
-    var backdrop = document.querySelector('.signature img');
-    var signature = document.getElementById('signature');
+    var signature = document.querySelector('input[name="sign"');
 
     form.addEventListener('submit', function(e) {
         signature.value = canvas.toDataURL();
@@ -19,14 +18,6 @@
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.lineWidth = 20;
-
-    if (backdrop) {
-        var bgImg = new Image();
-        bgImg.src = backdrop.getAttribute('src');
-        bgImg.onload = function() {
-            ctx.drawImage(bgImg, 0, 0);
-        };
-    }
 
     canvas.addEventListener('mousedown', function(e) {
         signing = true;

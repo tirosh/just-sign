@@ -48,6 +48,10 @@ input,
     /* border: 3px solid crimson; */
 }
 
+input {
+    display: block;
+}
+
 footer {
     height: 30px;
     background-color: #ffbfcb;

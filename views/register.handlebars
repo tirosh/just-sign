@@ -1,0 +1,16 @@
+<h1>Welcome to Petition</h1>
+<h2>Please sign up...</h2>
+{{#if (isdefined alert)}}<div class="alert">Please fill out all fields to register!</div>{{/if}}
+<form id="register" action="/register" method="post">
+    <label for="first">First Name</label>
+    <input name="first" autocomplete="{{first}}">
+    <label for="last">Last Name</label>
+    <input name="last" autocomplete="{{last}}">
+    <label for="email">Email Address</label>
+    <input name="email" autocomplete="{{email}}">
+    <label for="psswd">Password</label>
+    <input type="password" name="psswd" autocomplete="{{psswd}}">
+    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    <button type="submit">sign up</button>
+</form>
+<h3>If you are already registered, please <a href="/login">log in</a>.</h3>
