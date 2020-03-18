@@ -18,8 +18,7 @@ CREATE TABLE profiles (
     age INT,
     city VARCHAR(255),
     url VARCHAR(255),
-    user_id INT REFERENCES users(id),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    user_id INT REFERENCES users(id)
 );
 
 CREATE TABLE signatures (

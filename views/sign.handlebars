@@ -1,7 +1,7 @@
 <h1>Welcome to Petition</h1>
 <h2>Please sign here...</h2>
 {{#if (isdefined alert)}}<div class="alert">You have to sign to submit.</div>{{/if}}
-<form id="signature" action="/petition" method="post">
+<form id="signature" action="/sign" method="post">
     <div class="signature">
         <canvas id="canvas" width="600" height="100"></canvas>
         <input type="hidden" name="sign">
@@ -10,4 +10,4 @@
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit">submit</button>
 </form>
-<script src="/petition.js"></script>
+<script src="/sign.js"></script>

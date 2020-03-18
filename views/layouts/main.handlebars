@@ -12,7 +12,14 @@
     <main>
         {{{ body }}}
     </main>
-    <footer><a href="/">Petition FOOTER</a></footer>
+    <footer>
+        <a href="/">Petition FOOTER</a>
+        <a href="/logout" class="login">log out</a>
+        {{!-- #if loggedIn --}}
+        {{!-- else --}}
+        {{!-- <a href="/login" class="login">log in</a> --}}
+        {{!-- /if --}}
+    </footer>
 {{!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script> --}}
 <script src="/script.js"></script>
 </body>

@@ -3,39 +3,64 @@ const db = spicedPg('postgres:postgres:postgres@localhost:5432/petition');
 
 module.exports.insert = (table, userInpt, timestamp) => {
     if (timestamp) userInpt.timestamp = 'NOW()';
-    const keys = Object.keys(userInpt);
+    const columns = Object.keys(userInpt).toString();
     const values = Object.values(userInpt);
     const valIndex = [];
     for (let i = values.length; i > 0; i--) {
         valIndex.unshift(`$${i}`);
     }
-
-    // ////////////////////////////////////////////////
-    // const keys = Object.keys(userInpt);
-    // keys.push('timestamp');
-
-    // const values = Object.values(userInpt);
-    // const valIndex = ['NOW()'];
-    // for (let i = values.length; i > 0; i--) {
-    //     valIndex.unshift(`$${i}`);
-    // }
-
     const q = `
-        INSERT INTO ${table} (${keys.toString()})
-        VALUES (${valIndex.toString()}) RETURNING id
+        INSERT INTO ${table} (${columns})
+        VALUES (${valIndex.toString()}) 
+        RETURNING id
     `;
-    console.log('insert query: ', q);
+    // console.log('insert query: ', q);
     return db.query(q, values);
 };
 
-module.exports.select = (table, columns, id) => {
-    const idType = table === 'signatures' ? 'user_id' : 'id';
-    const ident = id ? ` WHERE ${idType} = ${id}` : '';
+module.exports.psswd = email => {
+    const q = `SELECT psswd FROM users WHERE email = $1`;
+    return db.query(q, [email]);
+};
 
-    const q = `SELECT ${columns.toString()} FROM ${table} ${ident}`;
+module.exports.select = (columns, table, column, condition, selector) => {
+    const q = `SELECT ${columns} FROM ${table} WHERE ${column} ${condition} $1`;
     console.log('select query: ', q);
+    return db.query(q, [selector]);
+};
+
+// SELECT first, last, age, city, url, signatures.user_id
+// FROM users
+// LEFT JOIN profiles
+// ON users.id = profiles.user_id
+// LEFT JOIN signatures
+// ON users.id = signatures.user_id
+// WHERE signatures.user_id IS NOT NULL;
+
+module.exports.selectJoin = qObj => {
+    let join = '';
+    if (qObj.joins) {
+        qObj.joins.forEach(obj => (join += Object.values(obj).join(' ') + ' '));
+    }
+    console.log('qObj.selector:', qObj.selector);
+
+    const q = `
+        SELECT ${qObj.columns} 
+        FROM ${qObj.from} 
+        ${join}
+        WHERE ${qObj.where} ${qObj.cond}`;
+    console.log('selectJoin query: ', q);
     return db.query(q);
 };
+
+// module.exports.select = (table, columns, id) => {
+//     const idType = table === 'signatures' ? 'user_id' : 'id';
+//     const ident = id ? ` WHERE ${idType} = ${id}` : '';
+
+//     const q = `SELECT ${columns.toString()} FROM ${table} ${ident}`;
+//     console.log('select query: ', q);
+//     return db.query(q);
+// };
 
 // module.exports.addSign = sign => {
 //     const q = `

@@ -1,5 +1,5 @@
 (function() {
-    console.log('Petition here..');
+    console.log('Sign here..');
 
     var form = document.getElementsByTagName('form')[0];
     var signature = document.querySelector('input[name="sign"');
