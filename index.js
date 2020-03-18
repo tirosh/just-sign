@@ -52,7 +52,11 @@ app.get('/', auth, (req, res) => {
 
 // GET register /////////////////////
 app.get('/register', (req, res) => {
-    if (req.session.signId) return res.redirect('/signed');
+    // req.session = null;
+    // if (req.session.signId !== null) {
+    //     console.log('req.session:', req.session);
+    //     return res.redirect('/signed');
+    // }
     res.render('register', {});
 });
 // POST register
@@ -93,6 +97,7 @@ app.get('/profile', auth, (req, res) => {
 // POST profile
 app.post('/profile', (req, res) => {
     const { age, city, url } = req.body;
+    console.log('req.body:', req.body);
     db.upsert({
         table: 'profiles',
         items: {
@@ -117,16 +122,32 @@ app.post('/login', (req, res) => {
     db.psswd(email)
         .then(dbData => dbData.rows[0].psswd)
         .then(hashdPsswd => compare(psswd, hashdPsswd))
-        .then(match => {
-            if (!match) return res.render('login', { alert: true });
-        })
-        .then(() => db.select('first, last, id', 'users', 'email', '=', email))
-        .then(dbData => {
-            req.session.userId = dbData.rows[0].id;
-            req.session.first = dbData.rows[0].first;
-            req.session.last = dbData.rows[0].last;
-            res.redirect('/sign');
-        });
+        .then(match =>
+            !match
+                ? res.render('login', { alert: true })
+                : db
+                      .select({
+                          columns: 'first, last, users.id, sign',
+                          from: 'users',
+                          joins: [
+                              {
+                                  type: 'LEFT JOIN',
+                                  table: 'signatures',
+                                  on: 'ON user_id = users.id'
+                              }
+                          ],
+                          where: 'email',
+                          relation: '=',
+                          arg: email
+                      })
+                      .then(dbData => {
+                          req.session.userId = dbData.rows[0].id;
+                          req.session.first = dbData.rows[0].first;
+                          req.session.last = dbData.rows[0].last;
+                          res.redirect('/sign');
+                      })
+        )
+        .catch(err => console.log('error in POST login:', err));
 });
 
 // GET logout ////////////////////////
@@ -173,7 +194,13 @@ app.post('/sign', (req, res) => {
 app.get('/signed', auth, (req, res) => {
     Promise.all([
         db
-            .select('sign', 'signatures', 'id', '=', req.session.userId)
+            .select({
+                columns: 'sign',
+                from: 'signatures',
+                where: 'user_id',
+                relation: '=',
+                arg: req.session.userId
+            })
             .then(dbData => dbData.rows[0].sign),
         db.count(req.session.signId).then(dbData => dbData.rows[0].count)
     ])
@@ -190,7 +217,7 @@ app.get('/signed', auth, (req, res) => {
 
 // GET signers //////////////////////
 app.get('/signers', auth, (req, res) => {
-    db.selectJoin({
+    db.select({
         columns: 'first, last, age, city, url, signatures.user_id',
         from: 'users',
         joins: [
@@ -202,11 +229,11 @@ app.get('/signers', auth, (req, res) => {
             {
                 type: 'LEFT JOIN',
                 table: 'signatures',
-                on: 'ON users.id = profiles.user_id'
+                on: 'ON users.id = signatures.user_id'
             }
         ],
         where: 'signatures.user_id',
-        cond: 'IS NOT NULL'
+        relation: 'IS NOT null'
     })
         .then(dbData => res.render('signers', { signers: dbData.rows }))
         .catch(err => console.log('Error in getSigners:', err));

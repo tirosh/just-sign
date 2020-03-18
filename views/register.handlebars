@@ -3,13 +3,13 @@
 {{#if (isdefined alert)}}<div class="alert">Please fill out all fields to register!</div>{{/if}}
 <form id="register" action="/register" method="post">
     <label for="first">First Name</label>
-    <input name="first" autocomplete="{{first}}" required>
+    <input name="first" autocomplete="given-name" value="{{first}}" required>
     <label for="last">Last Name</label>
-    <input name="last" autocomplete="{{last}}" required>
+    <input name="last" autocomplete="family-name" value="{{last}}" required>
     <label for="email">Email Address</label>
-    <input name="email" autocomplete="{{email}}" required>
+    <input name="email" autocomplete="email" value="{{email}}" required>
     <label for="psswd">Password</label>
-    <input type="password" name="psswd" autocomplete="{{psswd}}" required>
+    <input type="password" name="psswd" autocomplete="new-password" required>
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit">sign up</button>
 </form>
