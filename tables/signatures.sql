@@ -18,12 +18,12 @@ CREATE TABLE profiles (
     age INT,
     city VARCHAR(255),
     url VARCHAR(255),
-    user_id INT REFERENCES users(id)
+    user_id INT REFERENCES users(id) UNIQUE
 );
 
 CREATE TABLE signatures (
     id SERIAL PRIMARY KEY,
     sign TEXT NOT NULL,
-    user_id INTEGER NOT NULL REFERENCES users(id),
+    user_id INTEGER NOT NULL REFERENCES users(id) UNIQUE,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

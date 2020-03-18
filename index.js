@@ -9,7 +9,7 @@ const db = require('./utils/db.js');
 // require bcrypt for hashing passwords
 const { hash, compare } = require('./utils/bc.js');
 const app = express();
-const port = 8080;
+const port = process.env.PORT || 8080;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -62,11 +62,18 @@ app.post('/register', (req, res) => {
         ? res.render('sign', { first, last, email, psswd, alert: true })
         : hash(psswd)
               .then(hashdPsswd =>
-                  db.insert(
-                      'users',
-                      { first, last, email, psswd: hashdPsswd },
-                      true
-                  )
+                  db.upsert({
+                      table: 'users',
+                      items: {
+                          first,
+                          last,
+                          email,
+                          psswd: hashdPsswd
+                      },
+                      unique: 'email',
+                      timestamp: true,
+                      returnId: true
+                  })
               )
               .then(dbData => {
                   Object.assign(req.session, {
@@ -86,7 +93,16 @@ app.get('/profile', auth, (req, res) => {
 // POST profile
 app.post('/profile', (req, res) => {
     const { age, city, url } = req.body;
-    db.insert('profiles', { age, city, url, user_id: req.session.userId })
+    db.upsert({
+        table: 'profiles',
+        items: {
+            age,
+            city,
+            url,
+            user_id: req.session.userId
+        },
+        unique: 'user_id'
+    })
         .then(() => res.redirect('/sign'))
         .catch(err => console.log('error in POST register:', err));
 });
@@ -134,7 +150,16 @@ app.post('/sign', (req, res) => {
     sign === ''
         ? res.render('sign', { alert: true })
         : db
-              .insert('signatures', { sign, user_id: req.session.userId }, true)
+              .upsert({
+                  table: 'signatures',
+                  items: {
+                      sign,
+                      user_id: req.session.userId
+                  },
+                  unique: 'user_id',
+                  timestamp: true,
+                  returnId: true
+              })
               .then(dbData => {
                   req.session.signId = dbData.rows[0].id;
                   res.redirect('/signed');
