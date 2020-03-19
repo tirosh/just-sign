@@ -14,7 +14,9 @@
     </main>
     <footer>
         <a href="/">Petition FOOTER</a>
-        <a href="/logout" class="login">log out</a>
+        <form class="logout" action="/logout" method="post">
+            <button type="submit">log out</button>
+        </form>
         {{!-- #if loggedIn --}}
         {{!-- else --}}
         {{!-- <a href="/login" class="login">log in</a> --}}

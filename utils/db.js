@@ -129,33 +129,3 @@ module.exports.getSigners = () => {
     const q = `SELECT first, last FROM signatures`;
     return db.query(q);
 };
-
-/////////////////////////////
-// module.exports.select = (columns, table, column, condition, selector) => {
-//     const q = `SELECT ${columns} FROM ${table} WHERE ${column} ${condition} $1`;
-//     console.log('select query: ', q);
-//     return db.query(q, [selector]);
-// };
-
-// module.exports.select = (table, columns, id) => {
-//     const idType = table === 'signatures' ? 'user_id' : 'id';
-//     const ident = id ? ` WHERE ${idType} = ${id}` : '';
-
-//     const q = `SELECT ${columns.toString()} FROM ${table} ${ident}`;
-//     console.log('select query: ', q);
-//     return db.query(q);
-// };
-
-// module.exports.addSign = sign => {
-//     const q = `
-//         INSERT INTO signatures(first, last, sign, timestamp)
-//         VALUES ($1, $2, $3, NOW()) RETURNING id
-//     `;
-//     const params = [sign];
-//     return db.query(q, params);
-// };
-
-// module.exports.getSign = id => {
-//     const q = `SELECT sign FROM signatures WHERE id = $1`;
-//     return db.query(q, [id]);
-// };

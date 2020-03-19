@@ -1,66 +1,65 @@
 const express = require('express');
+const app = express();
+module.exports = app;
 const exphbs = require('express-handlebars');
 const bodyParser = require('body-parser');
+const { SESSION_SECRET: sessionSecret } = process.env.SESSION_SECRET
+    ? process.env
+    : require('./secrets.json');
 
 const cookieSession = require('cookie-session');
 const csurf = require('csurf');
 const db = require('./utils/db.js');
+const {
+    logReqRoute,
+    makeCookiesSafe,
+    ifNotRegistered,
+    ifLoggedIn,
+    ifNotSigned,
+    ifSigned
+} = require('./utils/middleware.js');
 
 // require bcrypt for hashing passwords
 const { hash, compare } = require('./utils/bc.js');
-const app = express();
 const port = process.env.PORT || 8080;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(
     cookieSession({
-        secret: `Poor, angry Chicken`,
+        secret: sessionSecret,
         maxAge: 1000 * 60 * 60 * 24 * 14
     })
 );
 // protecting against CSRF attacks
 app.use(csurf());
 
-// configure express to use express-handlebars
+// serve static projects
+app.use(express.static('./public'));
+
+// EXPRESS HANDLEBARS ///////////////
 let hbs = exphbs.create({
-    // Specify helpers which are only registered on this instance.
     helpers: { isdefined: value => value !== undefined }
 });
 app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
 
-// serve static projects
-app.use(express.static('./public'));
-
 // MIDDLEWARE ///////////////////////
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`);
-    res.set('x-frame-options', 'DENY');
-    res.locals.csrfToken = req.csrfToken();
-    next();
-});
-
-// AUTH /////////////////////////////
-const auth = (req, res, next) =>
-    req.session.userId ? next() : res.redirect('/register');
+app.use(logReqRoute);
+app.use(makeCookiesSafe);
+app.use(ifNotRegistered);
 
 // GET / ////////////////////////////
-app.get('/', auth, (req, res) => {
+app.get('/', (req, res) => {
     res.redirect('/register');
 });
 
 // GET register /////////////////////
-app.get('/register', (req, res) => {
-    // req.session = null;
-    // if (req.session.signId !== null) {
-    //     console.log('req.session:', req.session);
-    //     return res.redirect('/signed');
-    // }
+app.get('/register', ifLoggedIn, (req, res) => {
     res.render('register', {});
 });
 // POST register
-app.post('/register', (req, res) => {
+app.post('/register', ifLoggedIn, (req, res) => {
     const { first, last, email, psswd } = req.body;
     first === '' || last === '' || email === '' || psswd === ''
         ? res.render('sign', { first, last, email, psswd, alert: true })
@@ -90,34 +89,12 @@ app.post('/register', (req, res) => {
               .catch(err => console.log('error in POST register:', err));
 });
 
-// GET profile //////////////////////
-app.get('/profile', auth, (req, res) => {
-    res.render('profile', {});
-});
-// POST profile
-app.post('/profile', (req, res) => {
-    const { age, city, url } = req.body;
-    console.log('req.body:', req.body);
-    db.upsert({
-        table: 'profiles',
-        items: {
-            age,
-            city,
-            url,
-            user_id: req.session.userId
-        },
-        unique: 'user_id'
-    })
-        .then(() => res.redirect('/sign'))
-        .catch(err => console.log('error in POST register:', err));
-});
-
 // GET login ////////////////////////
-app.get('/login', (req, res) => {
+app.get('/login', ifLoggedIn, (req, res) => {
     res.render('login', {});
 });
 // POST login
-app.post('/login', (req, res) => {
+app.post('/login', ifLoggedIn, (req, res) => {
     const { email, psswd } = req.body;
     db.psswd(email)
         .then(dbData => dbData.rows[0].psswd)
@@ -141,24 +118,42 @@ app.post('/login', (req, res) => {
                           arg: email
                       })
                       .then(dbData => {
-                          req.session.userId = dbData.rows[0].id;
-                          req.session.first = dbData.rows[0].first;
-                          req.session.last = dbData.rows[0].last;
-                          res.redirect('/sign');
+                          const { id, first, last, sign } = dbData.rows[0];
+                          req.session.userId = id;
+                          req.session.first = first;
+                          req.session.last = last;
+                          sign
+                              ? res.redirect('/signed')
+                              : res.redirect('/sign');
                       })
         )
         .catch(err => console.log('error in POST login:', err));
 });
 
-// GET logout ////////////////////////
-app.get('/logout', (req, res) => {
-    req.session = null;
-    res.redirect('/');
+// GET profile //////////////////////
+app.get('/profile', (req, res) => {
+    res.render('profile', {});
+});
+// POST profile
+app.post('/profile', (req, res) => {
+    const { age, city, url } = req.body;
+    console.log('req.body:', req.body);
+    db.upsert({
+        table: 'profiles',
+        items: {
+            age,
+            city,
+            url,
+            user_id: req.session.userId
+        },
+        unique: 'user_id'
+    })
+        .then(() => res.redirect('/sign'))
+        .catch(err => console.log('error in POST register:', err));
 });
 
 // GET sign /////////////////////
-app.get('/sign', auth, (req, res) => {
-    if (req.session.signId) return res.redirect('/signed');
+app.get('/sign', ifSigned, (req, res) => {
     res.render('sign', {
         layout: 'main', // default, could be omitted
         first: req.session.first,
@@ -166,7 +161,7 @@ app.get('/sign', auth, (req, res) => {
     });
 });
 // POST sign
-app.post('/sign', (req, res) => {
+app.post('/sign', ifSigned, (req, res) => {
     const { sign } = req.body;
     sign === ''
         ? res.render('sign', { alert: true })
@@ -178,11 +173,10 @@ app.post('/sign', (req, res) => {
                       user_id: req.session.userId
                   },
                   unique: 'user_id',
-                  timestamp: true,
-                  returnId: true
+                  timestamp: true
               })
-              .then(dbData => {
-                  req.session.signId = dbData.rows[0].id;
+              .then(() => {
+                  req.session.signId = req.session.userId;
                   res.redirect('/signed');
               })
               .catch(err => {
@@ -191,7 +185,7 @@ app.post('/sign', (req, res) => {
 });
 
 // GET signed ///////////////////////
-app.get('/signed', auth, (req, res) => {
+app.get('/signed', ifNotSigned, (req, res) => {
     Promise.all([
         db
             .select({
@@ -216,7 +210,7 @@ app.get('/signed', auth, (req, res) => {
 });
 
 // GET signers //////////////////////
-app.get('/signers', auth, (req, res) => {
+app.get('/signers', ifNotSigned, (req, res) => {
     db.select({
         columns: 'first, last, age, city, url, signatures.user_id',
         from: 'users',
@@ -239,4 +233,13 @@ app.get('/signers', auth, (req, res) => {
         .catch(err => console.log('Error in getSigners:', err));
 });
 
-app.listen(port, () => console.log(`I'm listening on port: ${port}`));
+// GET logout ////////////////////////
+app.post('/logout', (req, res) => {
+    req.session.userId = null;
+    req.session.signId = null;
+    res.redirect('/');
+});
+
+if (require.main == module) {
+    app.listen(port, () => console.log(`I'm listening on port: ${port}`));
+}
