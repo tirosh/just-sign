@@ -51,7 +51,7 @@ app.use(ifNotRegistered);
 
 // GET / ////////////////////////////
 app.get('/', (req, res) => {
-    res.redirect('/register');
+    res.render('home', {});
 });
 
 // GET register /////////////////////
