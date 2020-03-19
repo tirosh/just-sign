@@ -50,7 +50,7 @@ app.use(makeCookiesSafe);
 app.use(ifNotRegistered);
 
 // GET / ////////////////////////////
-app.get('/', (req, res) => {
+app.get('/', ifLoggedIn, (req, res) => {
     res.render('home', {});
 });
 
@@ -232,9 +232,19 @@ app.get('/signers', ifNotSigned, (req, res) => {
         where: 'signatures.user_id',
         relation: 'IS NOT null'
     })
-        .then(dbData => res.render('signers', { signers: dbData.rows }))
+        .then(dbData => {
+            const regex = /^(http|https):\/\/[^ "]+$/;
+            const signers = dbData.rows.map(signer => {
+                if (!regex.test(signer.url)) delete signer.url;
+                return signer;
+            });
+            res.render('signers', { signers });
+        })
         .catch(err => console.log('Error in getSigners:', err));
 });
+
+// GET signers ///////////////////////
+app.get('/signers/:city', ifNotSigned, (req, res) => {});
 
 // GET logout ////////////////////////
 app.post('/logout', (req, res) => {

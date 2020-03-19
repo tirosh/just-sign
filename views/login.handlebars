@@ -3,9 +3,9 @@
 {{#if (isdefined alert)}}<div class="alert">login alert...</div>{{/if}}
 <form id="login" action="/login" method="post">
     <label for="email">Email Address</label>
-    <input name="email" autocomplete="{{email}}" required>
+    <input type="email" name="email" autocomplete="email" value="{{email}}" required>
     <label for="psswd">Password</label>
-    <input type="password" name="psswd" autocomplete="{{psswd}}" required>
+    <input type="password" name="psswd" autocomplete="new-password" required>
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit">sign up</button>
 </form>

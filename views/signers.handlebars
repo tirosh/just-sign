@@ -4,6 +4,13 @@
 </div>
 <ul>
 {{#signers}}
-<li><a href="{{url}}" target="_blank">{{first}} {{last}}</a> {{age}} <a href="/{{city}}">{{city}}</a></li>
+<li>
+    {{#if (isdefined url)}}
+        <a href="{{url}}" target="_blank">{{first}} {{last}}</a>
+    {{else}}
+        {{first}} {{last}}
+    {{/if}} 
+    {{age}} <a href="/{{city}}">{{city}}</a>
+</li>
 {{/signers}}
 </ul>

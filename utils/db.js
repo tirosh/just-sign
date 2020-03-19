@@ -85,7 +85,7 @@ module.exports.select = qObj => {
         ${join}
         WHERE ${qObj.where} ${qObj.relation} ${qObj.arg ? '$1' : ''}
         `;
-    console.log('select query: ', q);
+    console.log('SELECT query: ', q);
     return qObj.arg ? db.query(q, [qObj.arg]) : db.query(q);
 };
 
