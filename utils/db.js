@@ -4,6 +4,18 @@ const db = spicedPg(
         'postgres:postgres:postgres@localhost:5432/petition'
 );
 
+// PSSWD ////////////////////////////
+module.exports.psswd = email => {
+    const q = `SELECT psswd FROM users WHERE email = $1`;
+    return db.query(q, [email]);
+};
+
+// COUNT ////////////////////////////
+module.exports.count = table => {
+    const q = `SELECT COUNT(*) FROM ${table}`;
+    return db.query(q);
+};
+
 // UPSERT ///////////////////////////
 module.exports.upsert = qObj => {
     if (qObj.timestamp) qObj.items.timestamp = 'NOW()';
@@ -112,20 +124,3 @@ ON users.id = signatures.user_id
 WHERE signatures.user_id IS NOT NULL;
 
 ************************************/
-
-// PSSWD ////////////////////////////
-module.exports.psswd = email => {
-    const q = `SELECT psswd FROM users WHERE email = $1`;
-    return db.query(q, [email]);
-};
-
-// COUNT ////////////////////////////
-module.exports.count = () => {
-    const q = `SELECT COUNT(*) FROM signatures`;
-    return db.query(q);
-};
-
-module.exports.getSigners = () => {
-    const q = `SELECT first, last FROM signatures`;
-    return db.query(q);
-};

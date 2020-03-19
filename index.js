@@ -122,9 +122,12 @@ app.post('/login', ifLoggedIn, (req, res) => {
                           req.session.userId = id;
                           req.session.first = first;
                           req.session.last = last;
-                          sign
-                              ? res.redirect('/signed')
-                              : res.redirect('/sign');
+                          if (sign) {
+                              req.session.signId = true;
+                              res.redirect('/signed');
+                          } else {
+                              res.redirect('/sign');
+                          }
                       })
         )
         .catch(err => console.log('error in POST login:', err));
@@ -176,7 +179,7 @@ app.post('/sign', ifSigned, (req, res) => {
                   timestamp: true
               })
               .then(() => {
-                  req.session.signId = req.session.userId;
+                  req.session.signId = true;
                   res.redirect('/signed');
               })
               .catch(err => {
@@ -196,7 +199,7 @@ app.get('/signed', ifNotSigned, (req, res) => {
                 arg: req.session.userId
             })
             .then(dbData => dbData.rows[0].sign),
-        db.count(req.session.signId).then(dbData => dbData.rows[0].count)
+        db.count('signatures').then(dbData => dbData.rows[0].count)
     ])
         .then(datArr =>
             res.render('signed', {
