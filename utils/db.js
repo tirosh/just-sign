@@ -109,8 +109,8 @@ const qObj = {
         }
     ],
     where: 'signatures.user_id',
-    cond: 'IS NOT',
-    selector: 'null'
+    relation: 'IS NOT',
+    arg: 'null'
 };
 
 // sample query 

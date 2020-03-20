@@ -54,11 +54,11 @@ app.get('/', ifLoggedIn, (req, res) => {
     res.render('home', {});
 });
 
-// GET register /////////////////////
+// GET /register ////////////////////
 app.get('/register', ifLoggedIn, (req, res) => {
     res.render('register', {});
 });
-// POST register
+// POST /register
 app.post('/register', ifLoggedIn, (req, res) => {
     const { first, last, email, psswd } = req.body;
     first === '' || last === '' || email === '' || psswd === ''
@@ -86,14 +86,14 @@ app.post('/register', ifLoggedIn, (req, res) => {
                   });
                   res.redirect('/profile');
               })
-              .catch(err => console.log('error in POST register:', err));
+              .catch(err => console.log('error in POST /register:', err));
 });
 
-// GET login ////////////////////////
+// GET /login ///////////////////////
 app.get('/login', ifLoggedIn, (req, res) => {
     res.render('login', {});
 });
-// POST login
+// POST /login
 app.post('/login', ifLoggedIn, (req, res) => {
     const { email, psswd } = req.body;
     db.psswd(email)
@@ -104,7 +104,7 @@ app.post('/login', ifLoggedIn, (req, res) => {
                 ? res.render('login', { alert: true })
                 : db
                       .select({
-                          columns: 'first, last, users.id, sign',
+                          columns: 'first, last, city, sign',
                           from: 'users',
                           joins: [
                               {
@@ -118,26 +118,33 @@ app.post('/login', ifLoggedIn, (req, res) => {
                           arg: email
                       })
                       .then(dbData => {
-                          const { id, first, last, sign } = dbData.rows[0];
+                          const {
+                              id,
+                              first,
+                              last,
+                              city,
+                              sign
+                          } = dbData.rows[0];
                           req.session.userId = id;
                           req.session.first = first;
                           req.session.last = last;
+                          req.session.city = city;
                           if (sign) {
-                              req.session.signId = true;
+                              req.session.signed = true;
                               res.redirect('/signed');
                           } else {
                               res.redirect('/sign');
                           }
                       })
         )
-        .catch(err => console.log('error in POST login:', err));
+        .catch(err => console.log('error in POST /login:', err));
 });
 
-// GET profile //////////////////////
+// GET /profile /////////////////////
 app.get('/profile', (req, res) => {
     res.render('profile', {});
 });
-// POST profile
+// POST /profile
 app.post('/profile', (req, res) => {
     const { age, city, url } = req.body;
     console.log('req.body:', req.body);
@@ -152,10 +159,18 @@ app.post('/profile', (req, res) => {
         unique: 'user_id'
     })
         .then(() => res.redirect('/sign'))
-        .catch(err => console.log('error in POST register:', err));
+        .catch(err => console.log('error in POST /register:', err));
+});
+// GET /profile/edit ////////////////
+app.get('/profile/edit', (req, res) => {
+    res.render('profileEdit', {});
+});
+// POST /profile/edit
+app.post('/profile/edit', (req, res) => {
+    res.render('profileEdit', {});
 });
 
-// GET sign /////////////////////
+// GET /sign ////////////////////////
 app.get('/sign', ifSigned, (req, res) => {
     res.render('sign', {
         layout: 'main', // default, could be omitted
@@ -163,7 +178,7 @@ app.get('/sign', ifSigned, (req, res) => {
         last: req.session.last
     });
 });
-// POST sign
+// POST /sign
 app.post('/sign', ifSigned, (req, res) => {
     const { sign } = req.body;
     sign === ''
@@ -179,15 +194,15 @@ app.post('/sign', ifSigned, (req, res) => {
                   timestamp: true
               })
               .then(() => {
-                  req.session.signId = true;
+                  req.session.signed = true;
                   res.redirect('/signed');
               })
               .catch(err => {
-                  console.log('error in POST sign:', err);
+                  console.log('error in POST /sign:', err);
               });
 });
 
-// GET signed ///////////////////////
+// GET /signed //////////////////////
 app.get('/signed', ifNotSigned, (req, res) => {
     Promise.all([
         db
@@ -209,13 +224,13 @@ app.get('/signed', ifNotSigned, (req, res) => {
                 count: parseInt(datArr[1], 10)
             })
         )
-        .catch(err => console.log('Error in GET signed:', err));
+        .catch(err => console.log('Error in GET /signed:', err));
 });
 
-// GET signers //////////////////////
+// GET /signers /////////////////////
 app.get('/signers', ifNotSigned, (req, res) => {
     db.select({
-        columns: 'first, last, age, city, url, signatures.user_id',
+        columns: 'first, last, age, city, url',
         from: 'users',
         joins: [
             {
@@ -240,19 +255,48 @@ app.get('/signers', ifNotSigned, (req, res) => {
             });
             res.render('signers', { signers });
         })
-        .catch(err => console.log('Error in getSigners:', err));
+        .catch(err => console.log('Error in GET /signers:', err));
 });
 
-// GET signers ///////////////////////
-app.get('/signers/:city', ifNotSigned, (req, res) => {});
+// GET /signers //////////////////////
+app.get('/signers/:city', ifNotSigned, (req, res) => {
+    console.log('req.params.city:', req.params.city);
+    db.select({
+        columns: 'first, last, age, city, url',
+        from: 'users',
+        joins: [
+            {
+                type: 'LEFT JOIN',
+                table: 'profiles',
+                on: 'ON users.id = profiles.user_id'
+            },
+            {
+                type: 'LEFT JOIN',
+                table: 'signatures',
+                on: 'ON users.id = signatures.user_id'
+            }
+        ],
+        where: 'city',
+        relation: '=',
+        arg: req.params.city
+    })
+        .then(dbData => {
+            const regex = /^(http|https):\/\/[^ "]+$/;
+            const signers = dbData.rows.map(signer => {
+                if (!regex.test(signer.url)) delete signer.url;
+                return signer;
+            });
+            res.render('signers', { signers });
+        })
+        .catch(err => console.log('Error in GET /signers/:city :', err));
+});
 
-// GET logout ////////////////////////
+// GET /logout ///////////////////////
 app.post('/logout', (req, res) => {
     req.session.userId = null;
-    req.session.signId = null;
+    req.session.signed = null;
     res.redirect('/');
 });
 
-if (require.main == module) {
+if (require.main == module)
     app.listen(port, () => console.log(`I'm listening on port: ${port}`));
-}

@@ -18,7 +18,7 @@ exports.ifLoggedIn = (req, res, next) =>
     req.session.userId ? res.redirect('/sign') : next();
 
 exports.ifNotSigned = (req, res, next) =>
-    !req.session.signId ? res.redirect('/sign') : next();
+    !req.session.signed ? res.redirect('/sign') : next();
 
 exports.ifSigned = (req, res, next) =>
-    req.session.signId ? res.redirect('/signed') : next();
+    req.session.signed ? res.redirect('/signed') : next();
