@@ -298,5 +298,10 @@ app.post('/logout', (req, res) => {
     res.redirect('/');
 });
 
+app.use((err, req, res, next) => {
+    res.status(500);
+    res.render('error', { error: err });
+});
+
 if (require.main == module)
     app.listen(port, () => console.log(`I'm listening on port: ${port}`));
