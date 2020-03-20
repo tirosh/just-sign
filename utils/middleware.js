@@ -10,12 +10,12 @@ exports.makeCookiesSafe = (req, res, next) => {
 };
 
 exports.ifNotRegistered = (req, res, next) =>
-    !req.session.userId && req.url != '/register' && req.url != '/login'
+    !req.session.id && req.url != '/register' && req.url != '/login'
         ? res.redirect('register')
         : next();
 
 exports.ifLoggedIn = (req, res, next) =>
-    req.session.userId ? res.redirect('/sign') : next();
+    req.session.id ? res.redirect('/sign') : next();
 
 exports.ifNotSigned = (req, res, next) =>
     !req.session.signed ? res.redirect('/sign') : next();

@@ -101,16 +101,22 @@ app.post('/login', ifLoggedIn, (req, res) => {
         .then(hashdPsswd => compare(psswd, hashdPsswd))
         .then(match =>
             !match
-                ? res.render('login', { alert: true })
+                ? res.render('login', { email, alert: true })
                 : db
                       .select({
-                          columns: 'first, last, city, sign',
+                          columns:
+                              'users.id, first, last, age, city, url, signatures.user_id',
                           from: 'users',
                           joins: [
                               {
                                   type: 'LEFT JOIN',
+                                  table: 'profiles',
+                                  on: 'ON users.id = profiles.user_id'
+                              },
+                              {
+                                  type: 'LEFT JOIN',
                                   table: 'signatures',
-                                  on: 'ON user_id = users.id'
+                                  on: 'ON users.id = signatures.user_id'
                               }
                           ],
                           where: 'email',
@@ -118,19 +124,13 @@ app.post('/login', ifLoggedIn, (req, res) => {
                           arg: email
                       })
                       .then(dbData => {
-                          const {
-                              id,
-                              first,
-                              last,
-                              city,
-                              sign
-                          } = dbData.rows[0];
-                          req.session.userId = id;
-                          req.session.first = first;
-                          req.session.last = last;
-                          req.session.city = city;
-                          if (sign) {
-                              req.session.signed = true;
+                          dbData = dbData.rows[0];
+                          if (dbData.user_id) req.session.signed = true;
+                          delete dbData.user_id;
+                          console.log('req.session:', req.session);
+                          Object.assign(req.session, dbData);
+                          console.log('req.session:', req.session);
+                          if (req.session.signed) {
                               res.redirect('/signed');
                           } else {
                               res.redirect('/sign');
@@ -154,7 +154,7 @@ app.post('/profile', (req, res) => {
             age,
             city,
             url,
-            user_id: req.session.userId
+            user_id: req.session.id
         },
         unique: 'user_id'
     })
@@ -167,7 +167,7 @@ app.get('/profile/edit', (req, res) => {
 });
 // POST /profile/edit
 app.post('/profile/edit', (req, res) => {
-    res.render('profileEdit', {});
+    res.render('profileEdit', { upserted: true });
 });
 
 // GET /sign ////////////////////////
@@ -188,7 +188,7 @@ app.post('/sign', ifSigned, (req, res) => {
                   table: 'signatures',
                   items: {
                       sign,
-                      user_id: req.session.userId
+                      user_id: req.session.id
                   },
                   unique: 'user_id',
                   timestamp: true
@@ -211,7 +211,7 @@ app.get('/signed', ifNotSigned, (req, res) => {
                 from: 'signatures',
                 where: 'user_id',
                 relation: '=',
-                arg: req.session.userId
+                arg: req.session.id
             })
             .then(dbData => dbData.rows[0].sign),
         db.count('signatures').then(dbData => dbData.rows[0].count)
@@ -293,7 +293,7 @@ app.get('/signers/:city', ifNotSigned, (req, res) => {
 
 // GET /logout ///////////////////////
 app.post('/logout', (req, res) => {
-    req.session.userId = null;
+    req.session.id = null;
     req.session.signed = null;
     res.redirect('/');
 });
