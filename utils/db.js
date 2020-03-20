@@ -10,6 +10,12 @@ module.exports.psswd = email => {
     return db.query(q, [email]);
 };
 
+// DELETE SIGN //////////////////////
+module.exports.deleteSign = id => {
+    const q = `DELETE FROM signatures WHERE user_id = $1`;
+    return db.query(q, [id]);
+};
+
 // COUNT ////////////////////////////
 module.exports.count = table => {
     const q = `SELECT COUNT(*) FROM ${table}`;
@@ -18,6 +24,14 @@ module.exports.count = table => {
 
 // UPSERT ///////////////////////////
 module.exports.upsert = qObj => {
+    // console.log('qObj.itmes:', qObj.items);
+    // for (const item in qObj.items) {
+    //     if (qObj.items[item] === '') delete qObj.items[item];
+    // }
+    // console.log('qObj.itmes:', qObj.items);
+    // console.log('qObj.items.psswd:', qObj.items.psswd);
+    // if (qObj.items.psswd == '') delete qObj.items.psswd;
+
     if (qObj.timestamp) qObj.items.timestamp = 'NOW()';
     const rId = qObj.returnId ? 'RETURNING id' : '';
 
@@ -40,7 +54,7 @@ module.exports.upsert = qObj => {
         INSERT INTO ${qObj.table} (${columns.toString()})
         VALUES (${valIndex.toString()})
         ON CONFLICT (${qObj.unique})
-        DO UPDATE SET ${colValArr.toString()}        
+        DO UPDATE SET ${colValArr.toString()}
         ${rId}
     `;
     console.log('UPSERT query: ', q);
@@ -80,8 +94,8 @@ module.exports.select = qObj => {
         : '';
 
     const q = `
-        SELECT ${qObj.columns} 
-        FROM ${qObj.from} 
+        SELECT ${qObj.columns}
+        FROM ${qObj.from}
         ${join}
         WHERE ${qObj.where} ${qObj.relation} ${qObj.arg ? '$1' : ''}
         `;

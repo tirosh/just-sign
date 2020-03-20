@@ -11,7 +11,7 @@ exports.makeCookiesSafe = (req, res, next) => {
 
 exports.ifNotRegistered = (req, res, next) =>
     !req.session.id && req.url != '/register' && req.url != '/login'
-        ? res.redirect('register')
+        ? res.redirect('/register')
         : next();
 
 exports.ifLoggedIn = (req, res, next) =>

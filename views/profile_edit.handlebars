@@ -1,0 +1,21 @@
+<h1>Profile</h1>
+<h2>Edit your profile</h2>
+{{#if (isdefined alert)}}<div class="alert">...</div>{{/if}}
+<form id="profile" action="/profile/edit" method="post">
+    <label for="first">First Name</label>
+    <input name="first" autocomplete="given-name" value="{{first}}" required>
+    <label for="last">Last Name</label>
+    <input name="last" autocomplete="family-name" value="{{last}}" required>
+    <label for="email">Email Address</label>
+    <input type="email" name="email" autocomplete="email" value="{{email}}" required>
+    <label for="psswd">Password</label>
+    <input type="password" name="psswd" autocomplete="new-password">
+    <label for="age">Age</label>
+    <input type="number" name="age" value="{{age}}">
+    <label for="city">City</label>
+    <input name="city" autocomplete="address-level2" value="{{city}}">
+    <label for="url">Homepage</label>
+    <input name="url" autocomplete="url" value="{{homepage}}">
+    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    <button type="submit">Upsert</button>
+</form>

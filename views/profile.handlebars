@@ -3,7 +3,7 @@
 {{#if (isdefined alert)}}<div class="alert">...</div>{{/if}}
 <form id="profile" action="/profile" method="post">
     <label for="age">Age</label>
-    <input name="age" value="{{age}}">
+    <input type="number" name="age" value="{{age}}">
     <label for="city">City</label>
     <input name="city" autocomplete="address-level2" value="{{city}}">
     <label for="url">Homepage</label>

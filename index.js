@@ -62,7 +62,7 @@ app.get('/register', ifLoggedIn, (req, res) => {
 app.post('/register', ifLoggedIn, (req, res) => {
     const { first, last, email, psswd } = req.body;
     first === '' || last === '' || email === '' || psswd === ''
-        ? res.render('sign', { first, last, email, psswd, alert: true })
+        ? res.render('sign', { first, last, email, alert: true })
         : hash(psswd)
               .then(hashdPsswd =>
                   db.upsert({
@@ -80,9 +80,10 @@ app.post('/register', ifLoggedIn, (req, res) => {
               )
               .then(dbData => {
                   Object.assign(req.session, {
-                      userId: dbData.rows[0].id,
+                      id: dbData.rows[0].id,
                       first,
-                      last
+                      last,
+                      email
                   });
                   res.redirect('/profile');
               })
@@ -105,7 +106,7 @@ app.post('/login', ifLoggedIn, (req, res) => {
                 : db
                       .select({
                           columns:
-                              'users.id, first, last, age, city, url, signatures.user_id',
+                              'users.id, first, last, email, age, city, url, signatures.user_id',
                           from: 'users',
                           joins: [
                               {
@@ -127,9 +128,7 @@ app.post('/login', ifLoggedIn, (req, res) => {
                           dbData = dbData.rows[0];
                           if (dbData.user_id) req.session.signed = true;
                           delete dbData.user_id;
-                          console.log('req.session:', req.session);
                           Object.assign(req.session, dbData);
-                          console.log('req.session:', req.session);
                           if (req.session.signed) {
                               res.redirect('/signed');
                           } else {
@@ -147,7 +146,6 @@ app.get('/profile', (req, res) => {
 // POST /profile
 app.post('/profile', (req, res) => {
     const { age, city, url } = req.body;
-    console.log('req.body:', req.body);
     db.upsert({
         table: 'profiles',
         items: {
@@ -159,15 +157,62 @@ app.post('/profile', (req, res) => {
         unique: 'user_id'
     })
         .then(() => res.redirect('/sign'))
-        .catch(err => console.log('error in POST /register:', err));
+        .catch(err => console.log('error in POST /profile:', err));
 });
 // GET /profile/edit ////////////////
 app.get('/profile/edit', (req, res) => {
-    res.render('profileEdit', {});
+    const { first, last, email, age, city, url } = req.session;
+    res.render('profile_edit', {
+        first,
+        last,
+        email,
+        age,
+        city,
+        url
+    });
 });
 // POST /profile/edit
 app.post('/profile/edit', (req, res) => {
-    res.render('profileEdit', { upserted: true });
+    const profileItems = ({ psswd, age, city, url } = req.body);
+    const userItems = ({ first, last, email, psswd } = req.body);
+    if (userItems.psswd === '') delete userItems.psswd;
+
+    const tmpSession = { ...userItems, ...profileItems };
+    console.log('tmpSession:', tmpSession);
+    profileItems.user_id = req.session.id;
+
+    Promise.all([
+        db.upsert({
+            table: 'users',
+            items: userItems,
+            unique: 'email',
+            timestamp: true
+        }),
+        db.upsert({
+            table: 'profiles',
+            items: profileItems,
+            unique: 'user_id'
+        })
+    ])
+        .then(() => {
+            userItems.psswd
+                ? hash(userItems.psswd).then(hashdPsswd => {
+                      db.upsert({
+                          table: 'users',
+                          items: { psswd: hashdPsswd },
+                          unique: 'email',
+                          timestamp: true
+                      }).then(() => {
+                          Object.assign(req.session, tmpSession);
+                          res.redirect('/sign');
+                      });
+                  })
+                : '';
+
+            Object.assign(req.session, tmpSession);
+            res.redirect('/sign');
+        })
+        .catch(err => console.log('error in POST /profile/edit:', err));
 });
 
 // GET /sign ////////////////////////
@@ -225,6 +270,15 @@ app.get('/signed', ifNotSigned, (req, res) => {
             })
         )
         .catch(err => console.log('Error in GET /signed:', err));
+});
+// POST /sign/delete
+app.post('/sign/delete', ifNotSigned, (req, res) => {
+    db.deleteSign(req.session.id)
+        .then(() => {
+            req.session.signed = false;
+            res.redirect('/sign');
+        })
+        .catch(err => console.log('error in POST /sign/delete:', err));
 });
 
 // GET /signers /////////////////////
@@ -292,10 +346,9 @@ app.get('/signers/:city', ifNotSigned, (req, res) => {
 });
 
 // GET /logout ///////////////////////
-app.post('/logout', (req, res) => {
-    req.session.id = null;
-    req.session.signed = null;
-    res.redirect('/');
+app.get('/logout', (req, res) => {
+    req.session = null;
+    res.redirect('/signed');
 });
 
 app.use((err, req, res, next) => {
