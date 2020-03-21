@@ -3,6 +3,8 @@ const db = spicedPg(
     process.env.DATABASE_URL ||
         'postgres:postgres:postgres@localhost:5432/petition'
 );
+// require bcrypt for hashing passwords
+const { hash, compare } = require('./bc.js');
 
 // PSSWD ////////////////////////////
 module.exports.psswd = email => {
@@ -22,6 +24,57 @@ module.exports.count = table => {
     return db.query(q);
 };
 
+// USER REGISTER ////////////////////
+module.exports.setUser = (first, last, email, psswd) => {
+    const q = `
+        INSERT INTO users (first, last, email, psswd)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id`;
+    return hash(psswd).then(hashdPsswd =>
+        db.query(q, [first, last, email, hashdPsswd])
+    );
+};
+
+module.exports.updateUser = (...params) => {
+    const q = `
+            UPDATE users
+            SET first=$2, last=$3, email=$4${
+                params[4] === '' ? '' : ', psswd=$5'
+            }
+            WHERE id=$1`;
+
+    return params[4] === ''
+        ? db.query(q, params.splice(4, 1))
+        : hash(psswd).then(hashdPsswd => {
+              params[4] = hashdPsswd;
+              return db.query(q, params);
+          });
+};
+
+// USER GET /////////////////////////
+module.exports.getUser = email => {
+    const q = `
+        SELECT users.id, first, last, email, age, city, url, signatures.user_id
+        FROM users
+        LEFT JOIN profiles
+        ON users.id = profiles.user_id
+        LEFT JOIN signatures
+        ON users.id = signatures.user_id
+        WHERE email = $1`;
+    return db.query(q, [email]);
+};
+
+// PROFILE //////////////////////////
+module.exports.profile = (...params) => {
+    params = Object.values(params).map(val => (val === '' ? null : val));
+    const q = `
+        INSERT INTO profiles (age, city, url, user_id)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (user_id) 
+        DO UPDATE SET age=$1, city=$2, url=$3`;
+    return db.query(q, params);
+};
+
 // UPSERT ///////////////////////////
 module.exports.upsert = qObj => {
     // console.log('qObj.itmes:', qObj.items);
@@ -39,7 +92,7 @@ module.exports.upsert = qObj => {
     const values = Object.values(qObj.items).map(
         val => (val === '' ? null : val) // if value '' convert to null
     );
-    // console.log('upsert values:', values);
+    console.log('upsert values:', values);
 
     const valIndex = [];
     const colValArr = [];
@@ -51,9 +104,9 @@ module.exports.upsert = qObj => {
     }
 
     const q = `
-        INSERT INTO ${qObj.table} (${columns.toString()})
-        VALUES (${valIndex.toString()})
-        ON CONFLICT (${qObj.unique})
+        INSERT INTO ${qObj.table} (${columns.toString()}) 
+        VALUES (${valIndex.toString()}) 
+        ON CONFLICT (${qObj.unique}) 
         DO UPDATE SET ${colValArr.toString()}
         ${rId}
     `;
@@ -97,7 +150,7 @@ module.exports.select = qObj => {
         SELECT ${qObj.columns}
         FROM ${qObj.from}
         ${join}
-        WHERE ${qObj.where} ${qObj.relation} ${qObj.arg ? '$1' : ''}
+        WHERE ${qObj.where} ${qObj.cond} ${qObj.arg ? '$1' : ''}
         `;
     console.log('SELECT query: ', q);
     return qObj.arg ? db.query(q, [qObj.arg]) : db.query(q);
