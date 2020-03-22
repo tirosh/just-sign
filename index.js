@@ -61,7 +61,7 @@ app.get('/register', ifLoggedIn, (req, res) => {
 // POST /register
 app.post('/register', ifLoggedIn, (req, res) => {
     const { first, last, email, psswd } = req.body;
-    db.setUser(first, last, email, psswd)
+    db.registerUser(first, last, email, psswd)
         .then(dbData => dbData.rows[0].id)
         .then(id => {
             Object.assign(req.session, { id, first, last, email });
@@ -119,10 +119,10 @@ app.post('/profile/edit', (req, res) => {
     const { first, last, email, psswd, age, city, url } = req.body;
     const userInfo = { first, last, email, age, city, url };
 
-    console.log('req.body:', req.body);
-    console.log('req.session:', req.session);
-
-    db.updateUser(req.session.id, first, last, email, psswd)
+    Promise.all([
+        db.updateUser(req.session.id, first, last, email, psswd),
+        db.profile(req.session.id, age, city, url)
+    ])
         .then(() => {
             console.log('made it to updateUser');
 
@@ -131,63 +131,17 @@ app.post('/profile/edit', (req, res) => {
             res.redirect('/sign');
         })
         .catch(err => console.log('error in POST /profile/edit:', err));
-
-    // const promises = [];
-
-    // if (userInfo.psswd !== '') {
-    //     const psswd = userInfo.psswd;
-    //     promises.push(
-    //         hash(psswd).then(hashdPsswd => {
-    //             db.upsert({
-    //                 table: 'users',
-    //                 items: { id: req.session.id, psswd: hashdPsswd },
-    //                 unique: 'id'
-    //             });
-    //         })
-    //     );
-    //     delete userInfo.psswd;
-    // }
-    // if (Object.keys(userInfo).length !== 0) {
-    //     promises.push(
-    //         db.upsert({
-    //             table: 'users',
-    //             items: { id: req.session.id, ...userInfo },
-    //             unique: 'id'
-    //         })
-    //     );
-    // }
-    // if (Object.keys(profileInfo).length !== 0) {
-    //     promises.push(
-    //         db.upsert({
-    //             table: 'profiles',
-    //             items: { ...profileInfo, user_id: req.session.id },
-    //             unique: 'user_id'
-    //         })
-    //     );
-    // }
-    // Promise.all([
-    //     db.updateUser(req.session.id, first, last, email, psswd),
-    //     db.profile(req.session.id, age, city, url)
-    // ])
-    //     .then(() => {
-    //         Object.assign(req.session, userInfo);
-    //         console.log('req.session:', req.session);
-    //         res.redirect('/sign');
-    //     })
-    //     .catch(err => console.log('error in POST /profile/edit:', err));
 });
 
 // GET /sign ////////////////////////
 app.get('/sign', ifSigned, (req, res) => {
-    res.render('sign', {
-        layout: 'main', // default, could be omitted
-        first: req.session.first,
-        last: req.session.last
-    });
+    res.render('sign', { first: req.session.first, last: req.session.last });
 });
 // POST /sign
 app.post('/sign', ifSigned, (req, res) => {
     const { sign } = req.body;
+    console.log('sign :', sign);
+
     sign === ''
         ? res.render('sign', { alert: true })
         : db

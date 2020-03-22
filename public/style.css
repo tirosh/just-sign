@@ -23,6 +23,10 @@ main {
     background-color: #929292;
 }
 
+button {
+    display: block;
+}
+
 .description {
     /* white-space: pre-line; */
     margin-bottom: 1em;
@@ -38,6 +42,9 @@ main {
 }
 canvas {
     border: 1px solid black;
+}
+#blank {
+    display: none;
 }
 
 input,

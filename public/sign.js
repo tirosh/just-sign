@@ -1,17 +1,17 @@
 (function() {
     console.log('Sign here..');
 
-    var form = document.getElementsByTagName('form')[0];
+    var form = document.getElementById('signature');
     var signature = document.querySelector('input[name="sign"');
+    var canvas = document.getElementById('canvas');
+    var blank = document.getElementById('blank');
+    var ctx = canvas.getContext('2d');
 
     form.addEventListener('submit', function(e) {
-        signature.value = canvas.toDataURL();
+        if (canvas.toDataURL() !== blank.toDataURL())
+            signature.value = canvas.toDataURL();
     });
 
-    // CANVAS stuff
-    /////////////////////////////////////////////////////
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
     var pos = { x: 0, y: 0 };
     var signing = false;
 

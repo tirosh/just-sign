@@ -25,7 +25,7 @@ module.exports.count = table => {
 };
 
 // USER REGISTER ////////////////////
-module.exports.setUser = (first, last, email, psswd) => {
+module.exports.registerUser = (first, last, email, psswd) => {
     const q = `
         INSERT INTO users (first, last, email, psswd)
         VALUES ($1, $2, $3, $4)
@@ -37,12 +37,7 @@ module.exports.setUser = (first, last, email, psswd) => {
 
 // USER UPDATE //////////////////////
 module.exports.updateUser = (...params) => {
-    console.log('params:', params);
-
-    console.log('params:', params);
     const str = params[4] === '' ? params.splice(4) : ', psswd=$5';
-    console.log('params:', params);
-
     const q = `
         UPDATE users
         SET first=$2, last=$3, email=$4 ${str}
@@ -51,12 +46,7 @@ module.exports.updateUser = (...params) => {
     return params[4] === ''
         ? db.query(q, params)
         : hash(params[4]).then(hashdPsswd => {
-              console.log('hashdPsswd:', hashdPsswd);
-
               params[4] = hashdPsswd;
-              console.log('params:', params);
-              console.log('query:', q);
-
               return db.query(q, params);
           });
 };
@@ -98,7 +88,11 @@ module.exports.login = (email, psswd) => {
 
 // PROFILE //////////////////////////
 module.exports.profile = (...params) => {
+    console.log('params:', params);
+
     params = Object.values(params).map(val => (val === '' ? null : val));
+    console.log('params:', params);
+
     const q = `
         INSERT INTO profiles (user_id, age, city, url)
         VALUES ($1, $2, $3, $4)
