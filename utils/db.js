@@ -19,6 +19,8 @@ module.exports.registerUser = (first, last, email, psswd) => {
 
 // USER UPDATE //////////////////////
 module.exports.updateUser = (...params) => {
+    // params (id, first, last, email, psswd)
+    // or     (id, first, last, email)
     const str = params[4] === '' ? params.splice(4) : ', psswd=$5';
     const q = `
         UPDATE users
@@ -79,35 +81,34 @@ module.exports.addSign = (id, sign) => {
     return db.query(q, [id, sign]);
 };
 
+// SIGN GET /////////////////////////
+module.exports.getSign = id => {
+    const q = `SELECT sign FROM signatures WHERE user_id = $1`;
+    return db.query(q, [id]);
+};
+
+// SIGN COUNT ///////////////////////
+module.exports.countSigns = () => {
+    const q = `SELECT COUNT(*) FROM signatures`;
+    return db.query(q);
+};
+
+// SIGN DELETE //////////////////////
+module.exports.deleteSign = id => {
+    const q = `DELETE FROM signatures WHERE user_id = $1`;
+    return db.query(q, [id]);
+};
+
 // PSSWD ////////////////////////////
 const getPsswd = email => {
     const q = `SELECT psswd FROM users WHERE email = $1`;
     return db.query(q, [email]);
 };
 
-// DELETE SIGN //////////////////////
-module.exports.deleteSign = id => {
-    const q = `DELETE FROM signatures WHERE user_id = $1`;
-    return db.query(q, [id]);
-};
-
-// COUNT ////////////////////////////
-module.exports.count = table => {
-    const q = `SELECT COUNT(*) FROM ${table}`;
-    return db.query(q);
-};
-
-///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+// This is my attempt to write dynamic query functions.
 // UPSERT ///////////////////////////
 module.exports.upsert = qObj => {
-    // console.log('qObj.itmes:', qObj.items);
-    // for (const item in qObj.items) {
-    //     if (qObj.items[item] === '') delete qObj.items[item];
-    // }
-    // console.log('qObj.itmes:', qObj.items);
-    // console.log('qObj.items.psswd:', qObj.items.psswd);
-    // if (qObj.items.psswd == '') delete qObj.items.psswd;
-
     if (qObj.timestamp) qObj.items.timestamp = 'NOW()';
     const rId = qObj.returnId ? 'RETURNING id' : '';
 

@@ -156,16 +156,8 @@ app.post('/sign', ifSigned, (req, res) => {
 // GET /signed //////////////////////
 app.get('/signed', ifNotSigned, (req, res) => {
     Promise.all([
-        db
-            .select({
-                columns: 'sign',
-                from: 'signatures',
-                where: 'user_id',
-                cond: '=',
-                arg: req.session.id
-            })
-            .then(dbData => dbData.rows[0].sign),
-        db.count('signatures').then(dbData => dbData.rows[0].count)
+        db.getSign(req.session.id).then(dbData => dbData.rows[0].sign),
+        db.countSigns().then(dbData => dbData.rows[0].count)
     ])
         .then(datArr =>
             res.render('signed', {
