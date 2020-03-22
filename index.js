@@ -84,8 +84,6 @@ app.post('/login', ifLoggedIn, (req, res) => {
                 : dbData.rows[0]
         )
         .then(user => {
-            console.log('user:', user);
-
             if (user.user_id) req.session.signed = true;
             delete user.user_id;
             Object.assign(req.session, user);
@@ -103,7 +101,7 @@ app.get('/profile', (req, res) => {
 // POST /profile
 app.post('/profile', (req, res) => {
     const { age, city, url } = req.body;
-    db.profile(age, city, url, req.session.id)
+    db.profile(req.session.id, age, city, url)
         .then(() => {
             Object.assign(req.session, { age, city, url });
             res.redirect('/sign');
@@ -119,49 +117,64 @@ app.get('/profile/edit', (req, res) => {
 // POST /profile/edit
 app.post('/profile/edit', (req, res) => {
     const { first, last, email, psswd, age, city, url } = req.body;
-    const userInfo = { first, last, email, psswd };
-    const profileInfo = { age, city, url };
+    const userInfo = { first, last, email, age, city, url };
 
-    const promises = [];
+    console.log('req.body:', req.body);
+    console.log('req.session:', req.session);
 
-    if (userInfo.psswd !== '') {
-        const psswd = userInfo.psswd;
-        promises.push(
-            hash(psswd).then(hashdPsswd => {
-                db.upsert({
-                    table: 'users',
-                    items: { id: req.session.id, psswd: hashdPsswd },
-                    unique: 'id'
-                });
-            })
-        );
-        delete userInfo.psswd;
-    }
-    if (Object.keys(userInfo).length !== 0) {
-        promises.push(
-            db.upsert({
-                table: 'users',
-                items: { id: req.session.id, ...userInfo },
-                unique: 'id'
-            })
-        );
-    }
-    if (Object.keys(profileInfo).length !== 0) {
-        promises.push(
-            db.upsert({
-                table: 'profiles',
-                items: { ...profileInfo, user_id: req.session.id },
-                unique: 'user_id'
-            })
-        );
-    }
-    Promise.all(promises)
+    db.updateUser(req.session.id, first, last, email, psswd)
         .then(() => {
-            Object.assign(req.session, { ...userInfo, ...profileInfo });
+            console.log('made it to updateUser');
+
+            Object.assign(req.session, userInfo);
             console.log('req.session:', req.session);
             res.redirect('/sign');
         })
         .catch(err => console.log('error in POST /profile/edit:', err));
+
+    // const promises = [];
+
+    // if (userInfo.psswd !== '') {
+    //     const psswd = userInfo.psswd;
+    //     promises.push(
+    //         hash(psswd).then(hashdPsswd => {
+    //             db.upsert({
+    //                 table: 'users',
+    //                 items: { id: req.session.id, psswd: hashdPsswd },
+    //                 unique: 'id'
+    //             });
+    //         })
+    //     );
+    //     delete userInfo.psswd;
+    // }
+    // if (Object.keys(userInfo).length !== 0) {
+    //     promises.push(
+    //         db.upsert({
+    //             table: 'users',
+    //             items: { id: req.session.id, ...userInfo },
+    //             unique: 'id'
+    //         })
+    //     );
+    // }
+    // if (Object.keys(profileInfo).length !== 0) {
+    //     promises.push(
+    //         db.upsert({
+    //             table: 'profiles',
+    //             items: { ...profileInfo, user_id: req.session.id },
+    //             unique: 'user_id'
+    //         })
+    //     );
+    // }
+    // Promise.all([
+    //     db.updateUser(req.session.id, first, last, email, psswd),
+    //     db.profile(req.session.id, age, city, url)
+    // ])
+    //     .then(() => {
+    //         Object.assign(req.session, userInfo);
+    //         console.log('req.session:', req.session);
+    //         res.redirect('/sign');
+    //     })
+    //     .catch(err => console.log('error in POST /profile/edit:', err));
 });
 
 // GET /sign ////////////////////////

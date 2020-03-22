@@ -37,32 +37,42 @@ module.exports.setUser = (first, last, email, psswd) => {
 
 // USER UPDATE //////////////////////
 module.exports.updateUser = (...params) => {
-    const psswd = params[4] === '' ? '' : ', psswd=$5';
+    console.log('params:', params);
+
+    console.log('params:', params);
+    const str = params[4] === '' ? params.splice(4) : ', psswd=$5';
+    console.log('params:', params);
+
     const q = `
         UPDATE users
-        SET first=$2, last=$3, email=$4 ${psswd}
+        SET first=$2, last=$3, email=$4 ${str}
         WHERE id=$1`;
 
     return params[4] === ''
-        ? db.query(q, params.splice(4, 1))
-        : hash(psswd).then(hashdPsswd => {
+        ? db.query(q, params)
+        : hash(params[4]).then(hashdPsswd => {
+              console.log('hashdPsswd:', hashdPsswd);
+
               params[4] = hashdPsswd;
+              console.log('params:', params);
+              console.log('query:', q);
+
               return db.query(q, params);
           });
 };
 
 // USER GET /////////////////////////
-module.exports.getUser = email => {
-    const q = `
-        SELECT users.id, first, last, email, age, city, url, signatures.user_id
-        FROM users
-        LEFT JOIN profiles
-        ON users.id = profiles.user_id
-        LEFT JOIN signatures
-        ON users.id = signatures.user_id
-        WHERE email = $1`;
-    return db.query(q, [email]);
-};
+// module.exports.getUser = email => {
+//     const q = `
+//         SELECT users.id, first, last, email, age, city, url, signatures.user_id
+//         FROM users
+//         LEFT JOIN profiles
+//         ON users.id = profiles.user_id
+//         LEFT JOIN signatures
+//         ON users.id = signatures.user_id
+//         WHERE email = $1`;
+//     return db.query(q, [email]);
+// };
 
 module.exports.login = (email, psswd) => {
     const q = `
@@ -90,10 +100,10 @@ module.exports.login = (email, psswd) => {
 module.exports.profile = (...params) => {
     params = Object.values(params).map(val => (val === '' ? null : val));
     const q = `
-        INSERT INTO profiles (age, city, url, user_id)
+        INSERT INTO profiles (user_id, age, city, url)
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (user_id) 
-        DO UPDATE SET age=$1, city=$2, url=$3`;
+        DO UPDATE SET age=$2, city=$3, url=$4`;
     return db.query(q, params);
 };
 
