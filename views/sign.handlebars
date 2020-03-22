@@ -1,6 +1,5 @@
 <h1>Sign</h1>
 <h2>Hey {{first}} {{last}}, please sign here...</h2>
-{{#if (isdefined alert)}}<div class="alert">You have to sign to submit.</div>{{/if}}
 <form id="signature" action="/sign" method="post">
     <canvas id="canvas" width="600" height="100"></canvas>
     <canvas id="blank" width="600" height="100" ></canvas>
@@ -8,4 +7,5 @@
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type="submit">submit</button>
 </form>
+{{#if (isdefined alert)}}<div class="alert">Please sign first.</div>{{/if}}
 <script src="/sign.js"></script>

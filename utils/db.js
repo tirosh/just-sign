@@ -18,18 +18,7 @@ module.exports.registerUser = (first, last, email, psswd) => {
 };
 
 // USER UPDATE //////////////////////
-// module.exports.updateUser = (id, first, last, email, psswd) => {
-//     const q = `
-//         INSERT INTO users (id, first, last, email, psswd)
-//         VALUES ($1, $2, $3, $4, $5)
-//         ON CONFLICT (psswd)
-//         DO UPDATE SET first=$2, last=$3, email=$4
-//         WHERE users.id=$1`;
-//     return db.query(q, [id, first, last, email, psswd]);
-// };
 module.exports.updateUser = (...params) => {
-    // params (id, first, last, email, psswd)
-    // or     (id, first, last, email)
     const str = params[4] === '' ? params.splice(4) : ', psswd=$5';
     const q = `
         UPDATE users

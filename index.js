@@ -118,15 +118,12 @@ app.get('/profile/edit', (req, res) => {
 // POST /profile/edit
 app.post('/profile/edit', (req, res) => {
     const { first, last, email, psswd, age, city, url } = req.body;
-    const userInfo = { first, last, email, age, city, url };
     Promise.all([
         db.updateUser(req.session.id, first, last, email, psswd),
         db.profile(req.session.id, age, city, url)
     ])
         .then(() => {
-            // console.log('made it to updateUser');
-            Object.assign(req.session, userInfo);
-            // console.log('req.session:', req.session);
+            Object.assign(req.session, { first, last, email, age, city, url });
             res.redirect('/sign');
         })
         .catch(err => console.log('error in POST /profile/edit:', err));
@@ -134,10 +131,12 @@ app.post('/profile/edit', (req, res) => {
 
 // GET /sign ////////////////////////
 app.get('/sign', ifSigned, (req, res) => {
-    res.render('sign', { first: req.session.first, last: req.session.last });
+    const { first, last } = req.session;
+    res.render('sign', { first, last });
 });
 // POST /sign
 app.post('/sign', ifSigned, (req, res) => {
+    const { first, last } = req.session;
     const { sign } = req.body;
     sign !== ''
         ? db
@@ -149,7 +148,7 @@ app.post('/sign', ifSigned, (req, res) => {
               .catch(err => {
                   console.log('error in POST /sign:', err);
               })
-        : res.render('sign', { alert: true });
+        : res.render('sign', { first, last, alert: true });
 });
 
 // GET /signed //////////////////////
