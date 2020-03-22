@@ -6,24 +6,6 @@ const db = spicedPg(
 // require bcrypt for hashing passwords
 const { hash, compare } = require('./bc');
 
-// PSSWD ////////////////////////////
-const getPsswd = email => {
-    const q = `SELECT psswd FROM users WHERE email = $1`;
-    return db.query(q, [email]);
-};
-
-// DELETE SIGN //////////////////////
-module.exports.deleteSign = id => {
-    const q = `DELETE FROM signatures WHERE user_id = $1`;
-    return db.query(q, [id]);
-};
-
-// COUNT ////////////////////////////
-module.exports.count = table => {
-    const q = `SELECT COUNT(*) FROM ${table}`;
-    return db.query(q);
-};
-
 // USER REGISTER ////////////////////
 module.exports.registerUser = (first, last, email, psswd) => {
     const q = `
@@ -51,19 +33,7 @@ module.exports.updateUser = (...params) => {
           });
 };
 
-// USER GET /////////////////////////
-// module.exports.getUser = email => {
-//     const q = `
-//         SELECT users.id, first, last, email, age, city, url, signatures.user_id
-//         FROM users
-//         LEFT JOIN profiles
-//         ON users.id = profiles.user_id
-//         LEFT JOIN signatures
-//         ON users.id = signatures.user_id
-//         WHERE email = $1`;
-//     return db.query(q, [email]);
-// };
-
+// LOGIN ////////////////////////////
 module.exports.login = (email, psswd) => {
     const q = `
         SELECT users.id, first, last, email, age, city, url, signatures.user_id
@@ -101,6 +71,33 @@ module.exports.profile = (...params) => {
     return db.query(q, params);
 };
 
+// SIGN ADD /////////////////////////
+module.exports.addSign = (id, sign) => {
+    const q = `
+        INSERT INTO signatures (user_id, sign)
+        VALUES ($1, $2)`;
+    return db.query(q, [id, sign]);
+};
+
+// PSSWD ////////////////////////////
+const getPsswd = email => {
+    const q = `SELECT psswd FROM users WHERE email = $1`;
+    return db.query(q, [email]);
+};
+
+// DELETE SIGN //////////////////////
+module.exports.deleteSign = id => {
+    const q = `DELETE FROM signatures WHERE user_id = $1`;
+    return db.query(q, [id]);
+};
+
+// COUNT ////////////////////////////
+module.exports.count = table => {
+    const q = `SELECT COUNT(*) FROM ${table}`;
+    return db.query(q);
+};
+
+///////////////////////////////////////////////////////////////////////////
 // UPSERT ///////////////////////////
 module.exports.upsert = qObj => {
     // console.log('qObj.itmes:', qObj.items);

@@ -140,27 +140,17 @@ app.get('/sign', ifSigned, (req, res) => {
 // POST /sign
 app.post('/sign', ifSigned, (req, res) => {
     const { sign } = req.body;
-    console.log('sign :', sign);
-
-    sign === ''
-        ? res.render('sign', { alert: true })
-        : db
-              .upsert({
-                  table: 'signatures',
-                  items: {
-                      sign,
-                      user_id: req.session.id
-                  },
-                  unique: 'user_id',
-                  timestamp: true
-              })
+    sign !== ''
+        ? db
+              .addSign(req.session.id, sign)
               .then(() => {
                   req.session.signed = true;
                   res.redirect('/signed');
               })
               .catch(err => {
                   console.log('error in POST /sign:', err);
-              });
+              })
+        : res.render('sign', { alert: true });
 });
 
 // GET /signed //////////////////////

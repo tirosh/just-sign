@@ -2,52 +2,44 @@
     console.log('Sign here..');
 
     var form = document.getElementById('signature');
-    var signature = document.querySelector('input[name="sign"');
-    var canvas = document.getElementById('canvas');
+    var sign = document.querySelector('input[name="sign"');
     var blank = document.getElementById('blank');
+    var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
 
-    form.addEventListener('submit', function(e) {
-        if (canvas.toDataURL() !== blank.toDataURL())
-            signature.value = canvas.toDataURL();
-    });
-
-    var pos = { x: 0, y: 0 };
     var signing = false;
-
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.lineWidth = 20;
 
     canvas.addEventListener('mousedown', function(e) {
+        ctx.moveTo(pos(e).x, pos(e).y);
         signing = true;
-        updatePos(e);
     });
+
     canvas.addEventListener('mousemove', function(e) {
-        sign(e);
+        if (signing) {
+            ctx.strokeStyle = randomColor();
+            ctx.beginPath();
+            ctx.lineTo(pos(e).x, pos(e).y);
+            ctx.stroke();
+        }
     });
+
     document.addEventListener('mouseup', function(e) {
         signing = false;
     });
 
-    function sign(e) {
-        if (!signing) return;
-        ctx.strokeStyle = randomColor();
-        ctx.beginPath();
-        ctx.moveTo(pos.x, pos.y);
-        ctx.lineTo(
-            e.clientX - canvas.getBoundingClientRect().left,
-            e.clientY - canvas.getBoundingClientRect().top
-        );
-        ctx.stroke();
-        updatePos(e);
-    }
+    form.addEventListener('submit', function(e) {
+        if (canvas.toDataURL() !== blank.toDataURL())
+            sign.value = canvas.toDataURL();
+    });
 
-    function updatePos(e) {
-        return (pos = {
+    function pos(e) {
+        return {
             x: e.clientX - canvas.getBoundingClientRect().left,
             y: e.clientY - canvas.getBoundingClientRect().top
-        });
+        };
     }
 
     function randomColor() {
