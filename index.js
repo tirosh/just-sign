@@ -9,9 +9,6 @@ const { SESSION_SECRET: sessionSecret } = process.env.SESSION_SECRET
 // require db to handle sql queries
 const db = require('./utils/db.js');
 
-// require bcrypt for hashing passwords
-const { hash, compare } = require('./utils/bc.js');
-
 // serve static files
 app.use(express.static('./public'));
 
@@ -80,24 +77,22 @@ app.get('/login', ifLoggedIn, (req, res) => {
 // POST /login
 app.post('/login', ifLoggedIn, (req, res) => {
     const { email, psswd } = req.body;
-    db.psswd(email)
-        .then(dbData => dbData.rows[0].psswd)
-        .then(hashdPsswd => compare(psswd, hashdPsswd))
-        .then(match =>
-            !match
+    db.login(email, psswd)
+        .then(dbData =>
+            dbData === undefined
                 ? res.render('login', { email, alert: true })
-                : db
-                      .getUser(email)
-                      .then(dbData => dbData.rows[0])
-                      .then(user => {
-                          if (user.user_id) req.session.signed = true;
-                          delete user.user_id;
-                          Object.assign(req.session, user);
-                          req.session.signed
-                              ? res.redirect('/signed')
-                              : res.redirect('/sign');
-                      })
+                : dbData.rows[0]
         )
+        .then(user => {
+            console.log('user:', user);
+
+            if (user.user_id) req.session.signed = true;
+            delete user.user_id;
+            Object.assign(req.session, user);
+            req.session.signed
+                ? res.redirect('/signed')
+                : res.redirect('/sign');
+        })
         .catch(err => console.log('error in POST /login:', err));
 });
 

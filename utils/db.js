@@ -4,10 +4,10 @@ const db = spicedPg(
         'postgres:postgres:postgres@localhost:5432/petition'
 );
 // require bcrypt for hashing passwords
-const { hash, compare } = require('./bc.js');
+const { hash, compare } = require('./bc');
 
 // PSSWD ////////////////////////////
-module.exports.psswd = email => {
+const getPsswd = email => {
     const q = `SELECT psswd FROM users WHERE email = $1`;
     return db.query(q, [email]);
 };
@@ -35,13 +35,13 @@ module.exports.setUser = (first, last, email, psswd) => {
     );
 };
 
+// USER UPDATE //////////////////////
 module.exports.updateUser = (...params) => {
+    const psswd = params[4] === '' ? '' : ', psswd=$5';
     const q = `
-            UPDATE users
-            SET first=$2, last=$3, email=$4${
-                params[4] === '' ? '' : ', psswd=$5'
-            }
-            WHERE id=$1`;
+        UPDATE users
+        SET first=$2, last=$3, email=$4 ${psswd}
+        WHERE id=$1`;
 
     return params[4] === ''
         ? db.query(q, params.splice(4, 1))
@@ -62,6 +62,28 @@ module.exports.getUser = email => {
         ON users.id = signatures.user_id
         WHERE email = $1`;
     return db.query(q, [email]);
+};
+
+module.exports.login = (email, psswd) => {
+    const q = `
+        SELECT users.id, first, last, email, age, city, url, signatures.user_id
+        FROM users
+        LEFT JOIN profiles
+        ON users.id = profiles.user_id
+        LEFT JOIN signatures
+        ON users.id = signatures.user_id
+        WHERE email = $1`;
+
+    return getPsswd(email)
+        .then(dbData =>
+            dbData === undefined
+                ? Promise.reject(`Email doesn't exist.`)
+                : dbData.rows[0].psswd
+        )
+        .then(hashdPsswd => compare(psswd, hashdPsswd))
+        .then(match =>
+            match ? db.query(q, [email]) : Promise.reject(`Wrong password.`)
+        );
 };
 
 // PROFILE //////////////////////////
