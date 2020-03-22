@@ -183,45 +183,26 @@ app.post('/sign/delete', ifNotSigned, (req, res) => {
 // GET /signers /////////////////////
 app.get('/signers', ifNotSigned, (req, res) => {
     db.getSigners()
-        .then(dbData => {
-            const signers = dbData.rows.map(signer => {
+        .then(dbData =>
+            dbData.rows.map(signer => {
                 if (!regexUrl.test(signer.url)) delete signer.url;
                 return signer;
-            });
-            res.render('signers', { signers });
-        })
+            })
+        )
+        .then(signers => res.render('signers', { signers }))
         .catch(err => console.log('Error in GET /signers:', err));
 });
 
-// GET /signers //////////////////////
+// GET /signers/:city ////////////////
 app.get('/signers/:city', ifNotSigned, (req, res) => {
-    console.log('req.params.city:', req.params.city);
-    db.select({
-        columns: 'first, last, age, city, url',
-        from: 'users',
-        joins: [
-            {
-                type: 'LEFT JOIN',
-                table: 'profiles',
-                on: 'ON users.id = profiles.user_id'
-            },
-            {
-                type: 'LEFT JOIN',
-                table: 'signatures',
-                on: 'ON users.id = signatures.user_id'
-            }
-        ],
-        where: 'city',
-        cond: '=',
-        arg: req.params.city
-    })
-        .then(dbData => {
-            const signers = dbData.rows.map(signer => {
+    db.getSigners(req.params.city)
+        .then(dbData =>
+            dbData.rows.map(signer => {
                 if (!regexUrl.test(signer.url)) delete signer.url;
                 return signer;
-            });
-            res.render('signers', { signers });
-        })
+            })
+        )
+        .then(signers => res.render('signers', { signers }))
         .catch(err => console.log('Error in GET /signers/:city :', err));
 });
 

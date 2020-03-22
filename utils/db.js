@@ -100,16 +100,17 @@ module.exports.countSigns = () => {
 };
 
 // SIGNERS GET //////////////////////
-module.exports.getSigners = () => {
+module.exports.getSigners = city => {
+    const condition = city ? `WHERE city = $1` : '';
     const q = `
         SELECT first, last, age, city, url
         FROM users
         LEFT JOIN profiles
         ON users.id = profiles.user_id
-        LEFT JOIN signatures
+        JOIN signatures
         ON users.id = signatures.user_id
-        WHERE signatures.user_id IS NOT null`;
-    return db.query(q);
+        ${condition}`;
+    return city ? db.query(q, [city]) : db.query(q);
 };
 
 // PSSWD ////////////////////////////
