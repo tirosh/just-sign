@@ -9,8 +9,8 @@ const { hash, compare } = require('./bc');
 // USER REGISTER ////////////////////
 module.exports.registerUser = (first, last, email, psswd) => {
     const q = `
-        INSERT INTO users (first, last, email, psswd)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO users (first, last, email, psswd, timestamp)
+        VALUES ($1, $2, $3, $4, NOW())
         RETURNING id`;
     return hash(psswd).then(hashdPsswd =>
         db.query(q, [first, last, email, hashdPsswd])
@@ -18,6 +18,15 @@ module.exports.registerUser = (first, last, email, psswd) => {
 };
 
 // USER UPDATE //////////////////////
+// module.exports.updateUser = (id, first, last, email, psswd) => {
+//     const q = `
+//         INSERT INTO users (id, first, last, email, psswd)
+//         VALUES ($1, $2, $3, $4, $5)
+//         ON CONFLICT (psswd)
+//         DO UPDATE SET first=$2, last=$3, email=$4
+//         WHERE users.id=$1`;
+//     return db.query(q, [id, first, last, email, psswd]);
+// };
 module.exports.updateUser = (...params) => {
     // params (id, first, last, email, psswd)
     // or     (id, first, last, email)
@@ -27,7 +36,7 @@ module.exports.updateUser = (...params) => {
         SET first=$2, last=$3, email=$4 ${str}
         WHERE id=$1`;
 
-    return params[4] === ''
+    return params[4] === undefined
         ? db.query(q, params)
         : hash(params[4]).then(hashdPsswd => {
               params[4] = hashdPsswd;
@@ -59,25 +68,21 @@ module.exports.login = (email, psswd) => {
 };
 
 // PROFILE //////////////////////////
-module.exports.profile = (...params) => {
-    console.log('params:', params);
-
-    params = Object.values(params).map(val => (val === '' ? null : val));
-    console.log('params:', params);
-
+module.exports.profile = (id, age, city, url) => {
+    if (typeof age === 'string') age = null;
     const q = `
         INSERT INTO profiles (user_id, age, city, url)
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (user_id) 
         DO UPDATE SET age=$2, city=$3, url=$4`;
-    return db.query(q, params);
+    return db.query(q, [id, age, city, url]);
 };
 
 // SIGN ADD /////////////////////////
 module.exports.addSign = (id, sign) => {
     const q = `
-        INSERT INTO signatures (user_id, sign)
-        VALUES ($1, $2)`;
+        INSERT INTO signatures (user_id, sign, timestamp)
+        VALUES ($1, $2, NOW())`;
     return db.query(q, [id, sign]);
 };
 
@@ -119,113 +124,114 @@ const getPsswd = email => {
     return db.query(q, [email]);
 };
 
-///////////////////////////////////////////////////////
-// This is my attempt to write dynamic query functions.
-// UPSERT ///////////////////////////
-module.exports.upsert = qObj => {
-    if (qObj.timestamp) qObj.items.timestamp = 'NOW()';
-    const rId = qObj.returnId ? 'RETURNING id' : '';
+// ///////////////////////////////////////////////////////
+// // Below is my attempt to write dynamic query functions.
 
-    const columns = Object.keys(qObj.items);
-    const values = Object.values(qObj.items).map(
-        val => (val === '' ? null : val) // if value '' convert to null
-    );
-    console.log('upsert values:', values);
+// // UPSERT ///////////////////////////
+// module.exports.upsert = qObj => {
+//     if (qObj.timestamp) qObj.items.timestamp = 'NOW()';
+//     const rId = qObj.returnId ? 'RETURNING id' : '';
 
-    const valIndex = [];
-    const colValArr = [];
+//     const columns = Object.keys(qObj.items);
+//     const values = Object.values(qObj.items).map(
+//         val => (val === '' ? null : val) // if value '' convert to null
+//     );
+//     console.log('upsert values:', values);
 
-    for (let i = 0; i < values.length; i++) {
-        valIndex.push(`$${i + 1}`);
-        if (columns[i] !== qObj.unique)
-            colValArr.push([columns[i], `$${i + 1}`].join('='));
-    }
+//     const valIndex = [];
+//     const colValArr = [];
 
-    const q = `
-        INSERT INTO ${qObj.table} (${columns.toString()}) 
-        VALUES (${valIndex.toString()}) 
-        ON CONFLICT (${qObj.unique}) 
-        DO UPDATE SET ${colValArr.toString()}
-        ${rId}
-    `;
-    console.log('UPSERT query: ', q);
-    return db.query(q, values);
-};
+//     for (let i = 0; i < values.length; i++) {
+//         valIndex.push(`$${i + 1}`);
+//         if (columns[i] !== qObj.unique)
+//             colValArr.push([columns[i], `$${i + 1}`].join('='));
+//     }
 
-/* usage ****************************
+//     const q = `
+//         INSERT INTO ${qObj.table} (${columns.toString()})
+//         VALUES (${valIndex.toString()})
+//         ON CONFLICT (${qObj.unique})
+//         DO UPDATE SET ${colValArr.toString()}
+//         ${rId}
+//     `;
+//     console.log('UPSERT query: ', q);
+//     return db.query(q, values);
+// };
 
-// sample query object
-// -------------------
-const qObj = {
-    table: 'table',
-    items: {
-        column1: 'value1',
-        column2: 'value2',
-        column3: 'value3'
-    },
-    unique: 'column3',
-    timestamp: true,
-    returnId: true
-};
+// /* usage ****************************
 
-// sample query 
-// ------------
-INSERT INTO users (first, last, email, psswd)
-VALUES ($1, $2, $3, $4)
-ON CONFLICT (email)
-DO UPDATE SET first=$1, last=$2, psswd=$4
-RETURNING id
+// // sample query object
+// // -------------------
+// const qObj = {
+//     table: 'table',
+//     items: {
+//         column1: 'value1',
+//         column2: 'value2',
+//         column3: 'value3'
+//     },
+//     unique: 'column3',
+//     timestamp: true,
+//     returnId: true
+// };
 
-************************************/
+// // sample query
+// // ------------
+// INSERT INTO users (first, last, email, psswd)
+// VALUES ($1, $2, $3, $4)
+// ON CONFLICT (email)
+// DO UPDATE SET first=$1, last=$2, psswd=$4
+// RETURNING id
 
-// SELECT ///////////////////////////
-module.exports.select = qObj => {
-    let join = qObj.joins
-        ? qObj.joins.map(obj => Object.values(obj).join(' ')).join(' ')
-        : '';
+// ************************************/
 
-    const q = `
-        SELECT ${qObj.columns}
-        FROM ${qObj.from}
-        ${join}
-        WHERE ${qObj.where} ${qObj.cond} ${qObj.arg ? '$1' : ''}
-        `;
-    console.log('SELECT query: ', q);
-    return qObj.arg ? db.query(q, [qObj.arg]) : db.query(q);
-};
+// // SELECT ///////////////////////////
+// module.exports.select = qObj => {
+//     let join = qObj.joins
+//         ? qObj.joins.map(obj => Object.values(obj).join(' ')).join(' ')
+//         : '';
 
-/* usage ****************************
+//     const q = `
+//         SELECT ${qObj.columns}
+//         FROM ${qObj.from}
+//         ${join}
+//         WHERE ${qObj.where} ${qObj.cond} ${qObj.arg ? '$1' : ''}
+//         `;
+//     console.log('SELECT query: ', q);
+//     return qObj.arg ? db.query(q, [qObj.arg]) : db.query(q);
+// };
 
-// sample query object
-// -------------------
-const qObj = {
-    columns: 'first, last, age, city, url, signatures.user_id',
-    from: 'users',
-    joins: [
-        {
-            type: 'LEFT JOIN',
-            table: 'profiles',
-            on: 'ON users.id = profiles.user_id'
-        },
-        {
-            type: 'JOIN',
-            table: 'signatures',
-            on: 'ON users.id = profiles.user_id'
-        }
-    ],
-    where: 'signatures.user_id',
-    relation: 'IS NOT',
-    arg: 'null'
-};
+// /* usage ****************************
 
-// sample query 
-// ------------
-SELECT first, last, age, city, url, signatures.user_id
-FROM users
-LEFT JOIN profiles
-ON users.id = profiles.user_id
-LEFT JOIN signatures
-ON users.id = signatures.user_id
-WHERE signatures.user_id IS NOT NULL;
+// // sample query object
+// // -------------------
+// const qObj = {
+//     columns: 'first, last, age, city, url, signatures.user_id',
+//     from: 'users',
+//     joins: [
+//         {
+//             type: 'LEFT JOIN',
+//             table: 'profiles',
+//             on: 'ON users.id = profiles.user_id'
+//         },
+//         {
+//             type: 'JOIN',
+//             table: 'signatures',
+//             on: 'ON users.id = profiles.user_id'
+//         }
+//     ],
+//     where: 'signatures.user_id',
+//     relation: 'IS NOT',
+//     arg: 'null'
+// };
 
-************************************/
+// // sample query
+// // ------------
+// SELECT first, last, age, city, url, signatures.user_id
+// FROM users
+// LEFT JOIN profiles
+// ON users.id = profiles.user_id
+// LEFT JOIN signatures
+// ON users.id = signatures.user_id
+// WHERE signatures.user_id IS NOT NULL;
+
+// ************************************/

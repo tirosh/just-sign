@@ -119,16 +119,14 @@ app.get('/profile/edit', (req, res) => {
 app.post('/profile/edit', (req, res) => {
     const { first, last, email, psswd, age, city, url } = req.body;
     const userInfo = { first, last, email, age, city, url };
-
     Promise.all([
         db.updateUser(req.session.id, first, last, email, psswd),
         db.profile(req.session.id, age, city, url)
     ])
         .then(() => {
-            console.log('made it to updateUser');
-
+            // console.log('made it to updateUser');
             Object.assign(req.session, userInfo);
-            console.log('req.session:', req.session);
+            // console.log('req.session:', req.session);
             res.redirect('/sign');
         })
         .catch(err => console.log('error in POST /profile/edit:', err));
