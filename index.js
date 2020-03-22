@@ -5,6 +5,7 @@ const port = process.env.PORT || 8080;
 const { SESSION_SECRET: sessionSecret } = process.env.SESSION_SECRET
     ? process.env
     : require('./secrets.json');
+const regexUrl = /^(http|https):\/\/[^ "]+$/;
 
 // require db to handle sql queries
 const db = require('./utils/db.js');
@@ -181,28 +182,10 @@ app.post('/sign/delete', ifNotSigned, (req, res) => {
 
 // GET /signers /////////////////////
 app.get('/signers', ifNotSigned, (req, res) => {
-    db.select({
-        columns: 'first, last, age, city, url',
-        from: 'users',
-        joins: [
-            {
-                type: 'LEFT JOIN',
-                table: 'profiles',
-                on: 'ON users.id = profiles.user_id'
-            },
-            {
-                type: 'LEFT JOIN',
-                table: 'signatures',
-                on: 'ON users.id = signatures.user_id'
-            }
-        ],
-        where: 'signatures.user_id',
-        cond: 'IS NOT null'
-    })
+    db.getSigners()
         .then(dbData => {
-            const regex = /^(http|https):\/\/[^ "]+$/;
             const signers = dbData.rows.map(signer => {
-                if (!regex.test(signer.url)) delete signer.url;
+                if (!regexUrl.test(signer.url)) delete signer.url;
                 return signer;
             });
             res.render('signers', { signers });
@@ -233,9 +216,8 @@ app.get('/signers/:city', ifNotSigned, (req, res) => {
         arg: req.params.city
     })
         .then(dbData => {
-            const regex = /^(http|https):\/\/[^ "]+$/;
             const signers = dbData.rows.map(signer => {
-                if (!regex.test(signer.url)) delete signer.url;
+                if (!regexUrl.test(signer.url)) delete signer.url;
                 return signer;
             });
             res.render('signers', { signers });

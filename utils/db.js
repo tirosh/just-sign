@@ -87,16 +87,29 @@ module.exports.getSign = id => {
     return db.query(q, [id]);
 };
 
-// SIGN COUNT ///////////////////////
+// SIGN DELETE //////////////////////
+module.exports.deleteSign = id => {
+    const q = `DELETE FROM signatures WHERE user_id = $1`;
+    return db.query(q, [id]);
+};
+
+// SIGNS COUNT //////////////////////
 module.exports.countSigns = () => {
     const q = `SELECT COUNT(*) FROM signatures`;
     return db.query(q);
 };
 
-// SIGN DELETE //////////////////////
-module.exports.deleteSign = id => {
-    const q = `DELETE FROM signatures WHERE user_id = $1`;
-    return db.query(q, [id]);
+// SIGNERS GET //////////////////////
+module.exports.getSigners = () => {
+    const q = `
+        SELECT first, last, age, city, url
+        FROM users
+        LEFT JOIN profiles
+        ON users.id = profiles.user_id
+        LEFT JOIN signatures
+        ON users.id = signatures.user_id
+        WHERE signatures.user_id IS NOT null`;
+    return db.query(q);
 };
 
 // PSSWD ////////////////////////////
