@@ -141,11 +141,16 @@ canvas {
     display: none;
 }
 
-.signer {
+.signers {
+    border: 0;
     width: 50vw;
+    text-align: center;
+}
+
+.signers th,
+.signers td {
     border-bottom: 1px solid grey;
-    margin-top: 1em;
-    padding-bottom: 0.2em;
+    padding: 0.5em;
 }
 
 footer {

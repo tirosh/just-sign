@@ -1,13 +1,25 @@
 <h1>Signers</h1>
-<div class="signers">
-{{#signers}}
-<div class="signer">
-    {{#if (isdefined url)}}
-        <a href="{{url}}" target="_blank">{{first}} {{last}}</a>
-    {{else}}
-        {{first}} {{last}}
-    {{/if}} 
-    {{age}} <a href="/signers/{{city}}">{{city}}</a>
-</div>
-{{/signers}}
-</div>
+<table class="signers">
+    <tr>
+        <th>name</th>
+        <th>age</th>
+        <th>city</th>
+    </tr>
+    {{#signers}}
+    <tr>
+        <td>
+        {{#if (isdefined url)}}
+            <a href="{{url}}" target="_blank">{{first}} {{last}}</a>
+        {{else}}
+            {{first}} {{last}}
+        {{/if}}
+        </td>
+        <td>
+            {{age}}
+        </td>
+        <td>
+            <a href="/signers/{{city}}">{{city}}</a>
+        </td>
+    </tr>
+    {{/signers}}
+</table>
