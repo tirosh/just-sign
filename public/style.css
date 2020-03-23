@@ -63,6 +63,23 @@ h2 {
     text-align: center;
 }
 
+input {
+    display: block;
+    font-size: 16px;
+    line-height: 2em;
+    border-radius: 0.15rem;
+    margin-bottom: 1em;
+    border: 1px solid gray;
+    padding: 0 10px;
+    width: 300px;
+    background: none;
+}
+input:focus {
+    background: rgba(0, 0, 0, 0.1);
+    border: 0;
+    outline-color: #1ee56a;
+}
+
 a,
 a:visited {
     color: #1e88e5;
@@ -96,7 +113,6 @@ h3.register {
 }
 
 .signed a {
-    /* display: block; */
     border: 0;
     border-radius: 0.25rem;
     background: #1ee56a;
@@ -125,21 +141,11 @@ canvas {
     display: none;
 }
 
-input {
-    display: block;
-    font-size: 16px;
-    line-height: 2em;
-    border-radius: 0.15rem;
-    margin-bottom: 1em;
-    border: 1px solid gray;
-    padding: 0 10px;
-    width: 300px;
-    background: none;
-}
-input:focus {
-    background: rgba(0, 0, 0, 0.1);
-    border: 0;
-    outline-color: #1ee56a;
+.signer {
+    width: 50vw;
+    border-bottom: 1px solid grey;
+    margin-top: 1em;
+    padding-bottom: 0.2em;
 }
 
 footer {

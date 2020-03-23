@@ -187,12 +187,13 @@ app.post('/sign/delete', ifNotSigned, (req, res) => {
 // GET /signers /////////////////////
 app.get('/signers', ifNotSigned, (req, res) => {
     db.getSigners()
-        .then(dbData =>
-            dbData.rows.map(signer => {
+        .then(dbData => {
+            console.log('dbData.rows[0] :', dbData.rows[0]);
+            return dbData.rows.map(signer => {
                 if (!regexUrl.test(signer.url)) delete signer.url;
                 return signer;
-            })
-        )
+            });
+        })
         .then(signers => res.render('signers', { signers }))
         .catch(err => console.log('Error in GET /signers:', err));
 });

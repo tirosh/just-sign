@@ -58,7 +58,7 @@ module.exports.login = (email, psswd) => {
 
 // PROFILE //////////////////////////
 module.exports.profile = (id, age, city, url) => {
-    if (typeof age === 'string') age = null;
+    if (age === '') age = null;
     const q = `
         INSERT INTO profiles (user_id, age, city, url)
         VALUES ($1, $2, $3, $4)

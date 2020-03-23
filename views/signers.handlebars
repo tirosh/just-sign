@@ -1,13 +1,13 @@
 <h1>Signers</h1>
-<ul>
+<div class="signers">
 {{#signers}}
-<li>
+<div class="signer">
     {{#if (isdefined url)}}
         <a href="{{url}}" target="_blank">{{first}} {{last}}</a>
     {{else}}
         {{first}} {{last}}
     {{/if}} 
     {{age}} <a href="/signers/{{city}}">{{city}}</a>
-</li>
+</div>
 {{/signers}}
-</ul>
+</div>
