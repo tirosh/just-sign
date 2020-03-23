@@ -1,15 +1,18 @@
 <main>
-<div id="headline">
-JUST
-SIGN IT<span id="dot">.</span>
-</div>
-<h2>...against fraudulent use
-of sensitive data!</h2>
-<h1><a href="/register">sign it!</a></h1>
-<h4><a href="/login">login</a></h4>
-<script src="fittext.js"></script>
-<script>window.fitText(document.getElementById('headline'), 0.75);</script>
+    <div class="container">
+        {{#signs}}
 
-{{#signs}}
-    <img src="{{sign}}" width="300" height="100" alt="">
-{{/signs}}
+                    <img src="{{sign}}" width="300" height="100" alt="">
+        {{/signs}}
+    </div>
+    <div id="overlay">
+        <div class="headline">
+        JUST
+        SIGN IT<span class="dot">.</span>
+        </div>
+        <h2>petition to keep your sensitive data safe!</h2>
+        <h1><a href="/register">sign it!</a></h1>
+        <h4><a href="/login">login</a></h4>
+        {{!-- <script src="fittext.js"></script> --}}
+        {{!-- <script>window.fitText(document.getElementById('headline'), 0.75);</script> --}}
+    </div>
