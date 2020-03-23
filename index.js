@@ -52,7 +52,11 @@ app.use(ifNotRegistered);
 
 // GET / ////////////////////////////
 app.get('/', ifLoggedIn, (req, res) => {
-    res.render('home', { layout: 'blank' });
+    db.getSigns()
+        .then(dbData => dbData.rows)
+        .then(signs => {
+            res.render('home', { layout: 'blank', signs });
+        });
 });
 
 // GET /register ////////////////////
@@ -209,7 +213,7 @@ app.get('/signers/:city', ifNotSigned, (req, res) => {
 // GET /logout ///////////////////////
 app.get('/logout', (req, res) => {
     req.session = null;
-    res.redirect('/signed');
+    res.redirect('/');
 });
 
 app.use((err, req, res, next) => {
