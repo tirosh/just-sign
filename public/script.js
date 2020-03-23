@@ -3,7 +3,9 @@
     console.log("I'm not insane..");
 
     var header = document.getElementsByTagName('header')[0];
-    header.addEventListener('click', function(e) {
-        location.href = '/';
-    });
+    if (header) {
+        header.addEventListener('click', function(e) {
+            location.href = '/';
+        });
+    }
 })();

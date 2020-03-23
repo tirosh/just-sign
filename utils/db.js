@@ -87,6 +87,12 @@ module.exports.deleteSign = id => {
     return db.query(q, [id]);
 };
 
+// SIGNS GET ////////////////////////
+module.exports.getSigns = () => {
+    const q = `SELECT sign FROM signatures`;
+    return db.query(q);
+};
+
 // SIGNS COUNT //////////////////////
 module.exports.countSigns = () => {
     const q = `SELECT COUNT(*) FROM signatures`;
