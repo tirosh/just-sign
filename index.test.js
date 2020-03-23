@@ -8,36 +8,36 @@ test('LOGGED OUT users are redirected to /register, when they attempt to /sign',
         .get('/sign')
         .then(res => {
             expect(res.statusCode).toBe(302);
-            expect(res.headers.location).toBe('register');
+            expect(res.headers.location).toBe('/register');
         });
 });
 
 test('LOGGED IN users are redirected to /sign, when they attempt to /login', () => {
-    const mySession = { userId: true };
+    const mySession = { id: true };
     cookieSession.mockSession(mySession);
     return supertest(app)
         .get('/login')
         .then(res => {
-            expect(mySession.userId).toBe(true);
+            expect(mySession.id).toBe(true);
             expect(res.statusCode).toBe(302);
             expect(res.headers.location).toBe('/sign');
         });
 });
 
 test('LOGGED IN users are redirected to /sign, when they attempt to /register', () => {
-    const mySession = { userId: true };
+    const mySession = { id: true };
     cookieSession.mockSession(mySession);
     return supertest(app)
         .get('/register')
         .then(res => {
-            expect(mySession.userId).toBe(true);
+            expect(mySession.id).toBe(true);
             expect(res.statusCode).toBe(302);
             expect(res.headers.location).toBe('/sign');
         });
 });
 
 test('LOGGED IN users who have SIGNED are redirected to /signed, when they attempt to /sign', () => {
-    const mySession = { userId: true, signId: true };
+    const mySession = { id: true, signed: true };
     cookieSession.mockSession(mySession);
     return supertest(app)
         .get('/sign')
@@ -48,8 +48,8 @@ test('LOGGED IN users who have SIGNED are redirected to /signed, when they attem
 });
 
 test('LOGGED IN users who have SIGNED are redirected to /signed, when they attempt to POST a /sign', () => {
-    const mySession = { userId: true, signId: true };
-    cookieSession.mockSession(mySession);
+    // const mySession = { id: true, signed: true };
+    // cookieSession.mockSession(mySession);
     return supertest(app)
         .post('/sign')
         .then(res => {
@@ -59,7 +59,7 @@ test('LOGGED IN users who have SIGNED are redirected to /signed, when they attem
 });
 
 test('LOGGED IN users who have NOT SIGNED are redirected to /sign, when they attempt to /signed', () => {
-    const mySession = { userId: true, signId: false };
+    const mySession = { id: true, signed: false };
     cookieSession.mockSession(mySession);
     return supertest(app)
         .get('/signed')
@@ -70,7 +70,7 @@ test('LOGGED IN users who have NOT SIGNED are redirected to /sign, when they att
 });
 
 test('LOGGED IN users who have NOT SIGNED are redirected to /sign, when they attempt to /signed', () => {
-    const mySession = { userId: true, signId: false };
+    const mySession = { id: true, signed: false };
     cookieSession.mockSession(mySession);
     return supertest(app)
         .get('/signers')

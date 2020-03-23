@@ -65,6 +65,12 @@
         };
     }
 
+    function getDist(p1, p2) {
+        return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    }
+    function getAngle(p1, p2) {
+        return Math.atan2(p2.x - p1.x, p2.y - p1.y);
+    }
     function randomColor() {
         var colorChars = '0123456789abcdef';
         var colorString = '#';
@@ -73,11 +79,5 @@
             colorString += colorChars[randomIndex];
         }
         return colorString;
-    }
-    function getDist(p1, p2) {
-        return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
-    }
-    function getAngle(p1, p2) {
-        return Math.atan2(p2.x - p1.x, p2.y - p1.y);
     }
 })();

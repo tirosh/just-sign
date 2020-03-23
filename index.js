@@ -1,16 +1,13 @@
 const express = require('express');
-const app = (module.exports.app = express());
+const app = (module.exports = express());
 const port = process.env.PORT || 8080;
 
 const { SESSION_SECRET: sessionSecret } = process.env.SESSION_SECRET
     ? process.env
     : require('./secrets.json');
-const regexUrl = /^(http|https):\/\/[^ "]+$/;
-
-// require db to handle sql queries
 const db = require('./utils/db.js');
+const regexHTTP = /^(http|https):\/\/[^ "]+$/;
 
-// serve static files
 app.use(express.static('./public'));
 
 const bodyParser = require('body-parser');
@@ -25,11 +22,9 @@ app.use(
     })
 );
 
-// protecting against CSRF attacks
 const csurf = require('csurf');
 app.use(csurf());
 
-// EXPRESS HANDLEBARS ///////////////
 const exphbs = require('express-handlebars');
 let hbs = exphbs.create({
     helpers: { isdefined: value => value !== undefined }
@@ -37,7 +32,6 @@ let hbs = exphbs.create({
 app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
 
-// MIDDLEWARE ///////////////////////
 const {
     logReqRoute,
     makeCookiesSafe,
@@ -72,7 +66,20 @@ app.post('/register', ifLoggedIn, (req, res) => {
             Object.assign(req.session, { id, first, last, email });
             res.redirect('/profile');
         })
-        .catch(err => console.log('error in POST /register:', err));
+        .catch(err => {
+            console.log('error in POST /register:', err);
+            const alert =
+                err.constraint === 'users_email_key'
+                    ? 'already registered'
+                    : 'try again';
+            res.render('register', {
+                layout: 'blank',
+                first,
+                last,
+                email,
+                alert: alert
+            });
+        });
 });
 
 // GET /login ///////////////////////
@@ -190,7 +197,7 @@ app.get('/signers', ifNotSigned, (req, res) => {
         .then(dbData => {
             console.log('dbData.rows[0] :', dbData.rows[0]);
             return dbData.rows.map(signer => {
-                if (!regexUrl.test(signer.url)) delete signer.url;
+                if (!regexHTTP.test(signer.url)) delete signer.url;
                 return signer;
             });
         })
@@ -203,7 +210,7 @@ app.get('/signers/:city', ifNotSigned, (req, res) => {
     db.getSigners(req.params.city)
         .then(dbData =>
             dbData.rows.map(signer => {
-                if (!regexUrl.test(signer.url)) delete signer.url;
+                if (!regexHTTP.test(signer.url)) delete signer.url;
                 return signer;
             })
         )

@@ -10,10 +10,6 @@
     <label for="psswd">Password</label>
     <input type="password" name="psswd" autocomplete="new-password" required>
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
-    <button type="submit">Register</button>
+    <button type="submit">Register</button>{{#if (isdefined alert)}}<div class="alert">{{alert}}</div>{{/if}}
+    <h3>or <a href="/login">log in</a></h3>
 </form>
-<div>
-    {{#if (isdefined alert)}}<div class="alert">Please fill out all fields to register!</div>{{/if}}
-    <h3 class="register">If you are already registered...</h3>
-    <h3><a href="/login">log in</a></h3>
-</div>

@@ -2,3 +2,6 @@
 // it should mock the database queries and return whatever you whish for
 
 // jest.mock('./')
+
+// SIGN ADD /////////////////////////
+// module.exports.addSign = jest.fn().mockResolvedValue(43);

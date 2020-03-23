@@ -3,8 +3,8 @@
     <img class="signature" width="600" height="200" src="{{sign}}" alt="signature">
     <form action="/sign/delete" method="post">
         <input type="hidden" name="_csrf" value="{{csrfToken}}">
+        <a class="button" href="/profile/edit">Edit your profile</a>
         <button type="submit">Delete your signature</button>
     </form>
-    <a href="/profile/edit">Edit your profile</a>
-    <a href="/signers">See all the {{count}} signers</a>
+    <div>See all <span class="count">{{count}}</span> <a href="/signers">signers</a></div>
 </div>
