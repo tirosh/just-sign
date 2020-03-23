@@ -66,7 +66,7 @@ app.post('/register', ifLoggedIn, (req, res) => {
         .then(dbData => dbData.rows[0].id)
         .then(id => {
             Object.assign(req.session, { id, first, last, email });
-            res.redirect('/profile');
+            res.redirect('/profile', { first });
         })
         .catch(err => console.log('error in POST /register:', err));
 });
