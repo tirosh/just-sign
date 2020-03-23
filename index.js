@@ -52,12 +52,12 @@ app.use(ifNotRegistered);
 
 // GET / ////////////////////////////
 app.get('/', ifLoggedIn, (req, res) => {
-    res.render('home');
+    res.render('home', { layout: 'blank' });
 });
 
 // GET /register ////////////////////
 app.get('/register', ifLoggedIn, (req, res) => {
-    res.render('register');
+    res.render('register', { layout: 'blank' });
 });
 // POST /register
 app.post('/register', ifLoggedIn, (req, res) => {
@@ -73,7 +73,7 @@ app.post('/register', ifLoggedIn, (req, res) => {
 
 // GET /login ///////////////////////
 app.get('/login', ifLoggedIn, (req, res) => {
-    res.render('login');
+    res.render('login', { layout: 'blank' });
 });
 // POST /login
 app.post('/login', ifLoggedIn, (req, res) => {
@@ -81,7 +81,7 @@ app.post('/login', ifLoggedIn, (req, res) => {
     db.login(email, psswd)
         .then(dbData =>
             dbData === undefined
-                ? res.render('login', { email, alert: true })
+                ? res.render('login', { layout: 'blank', email, alert: true })
                 : dbData.rows[0]
         )
         .then(user => {
@@ -92,7 +92,10 @@ app.post('/login', ifLoggedIn, (req, res) => {
                 ? res.redirect('/signed')
                 : res.redirect('/sign');
         })
-        .catch(err => console.log('error in POST /login:', err));
+        .catch(err => {
+            console.log('error in POST /login:', err);
+            res.render('login', { layout: 'blank', email, alert: err });
+        });
 });
 
 // GET /profile /////////////////////
