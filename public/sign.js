@@ -1,6 +1,7 @@
 (function() {
     console.log('Sign here..');
 
+    var ongoingTouches = [];
     var form = document.getElementById('signature');
     var reset = document.getElementById('reset');
     var sign = document.querySelector('input[name="sign"');
@@ -57,6 +58,16 @@
     reset.addEventListener('click', function(e) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
+
+    function startup() {
+        var el = document.getElementById('canvas');
+        el.addEventListener('touchstart', handleStart, false);
+        el.addEventListener('touchend', handleEnd, false);
+        el.addEventListener('touchcancel', handleCancel, false);
+        el.addEventListener('touchmove', handleMove, false);
+    }
+
+    document.addEventListener('DOMContentLoaded', startup);
 
     function pos(e) {
         return {
